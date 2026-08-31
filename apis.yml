@@ -1,0 +1,58 @@
+name: JuriSign API
+description: >-
+  eIDAS-compliant electronic signature REST API built and hosted in France. Provides document upload, sign requests,
+  templates, bulk campaigns, public self-signing forms, webhooks, and audit proof downloads, with a free sandbox.
+  Signature level is Simple Electronic Signature (SES) under eIDAS Regulation (EU) 910/2014.
+url: https://raw.githubusercontent.com/api-evangelist/jurisign-api/refs/heads/main/apis.yml
+created: '2026-08-31'
+modified: '2026-08-31'
+specificationVersion: '0.21'
+tags:
+  - electronic-signature
+  - esignature
+  - eidas
+  - document-signing
+  - pdf
+  - webhooks
+  - otp
+  - gdpr
+  - france
+  - legaltech
+apis:
+  - name: JuriSign REST API
+    description: >-
+      Documented, versioned REST API (OpenAPI 3.0.3) for eIDAS-compliant electronic signatures: documents, sign
+      requests, templates, bulk campaigns, public forms, webhooks, account, and authentication. Bearer token auth with a
+      free sandbox token flow.
+    humanURL: https://www.jurisign.fr/developpeurs
+    baseURL: https://www.jurisign.fr/api/v1
+    tags:
+      - electronic-signature
+      - esignature
+      - eidas
+      - document-signing
+      - pdf
+      - webhooks
+      - otp
+      - gdpr
+      - france
+      - legaltech
+    properties:
+      - type: OpenAPI
+        url: https://www.jurisign.fr/api/openapi.json
+      - type: Documentation
+        url: https://www.jurisign.fr/api/docs
+      - type: Documentation
+        url: https://www.jurisign.fr/api/guide
+      - type: Documentation
+        url: https://www.jurisign.fr/api/swagger
+      - type: Documentation
+        url: https://www.jurisign.fr/developpeurs
+maintainers:
+  - FN: JuriSign API
+    url: https://www.jurisign.fr
+generated:
+  by: apis.io/add
+  model: claude-opus-4-8
+  confidence: 95
+  at: '2026-08-31T09:33:17.005Z'
