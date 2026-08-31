@@ -1,0 +1,115 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/api/openapi.json
+sources:
+- https://www.jurisign.fr/api/openapi.json
+- https://www.jurisign.fr/api/guide
+- https://www.jurisign.fr/developpeurs
+asyncapi_spec_published: false
+asyncapi_probe:
+  url: https://www.jurisign.fr/api/asyncapi.yaml
+  status: 404
+asyncapi_note: >-
+  JuriSign publishes no AsyncAPI document and no event catalog file. It does publish a real, managed webhook
+  surface with a closed event enum inside the OpenAPI, so this artifact records that webhook catalogue. No
+  AsyncAPI was authored on the provider's behalf.
+transport: https-webhook
+delivery: at-least-once
+management_api:
+  description: Webhook endpoints are first-class API resources with their own CRUD, delivery logs and secret rotation.
+  operations:
+  - operationId: listWebhooks
+    method: GET
+    path: /webhooks
+  - operationId: createWebhook
+    method: POST
+    path: /webhooks
+  - operationId: updateWebhook
+    method: PUT
+    path: /webhooks/{id}
+  - operationId: deleteWebhook
+    method: DELETE
+    path: /webhooks/{id}
+  - operationId: getWebhookLogs
+    method: GET
+    path: /webhooks/{id}/logs
+  - operationId: regenerateWebhookSecret
+    method: POST
+    path: /webhooks/{id}/regenerate-secret
+  scope_required: webhooks:manage
+subscription:
+  endpoint_constraint: HTTPS URL, max 500 characters
+  events_constraint: At least one event must be subscribed.
+  registration_example: |
+    curl -X POST https://www.jurisign.fr/api/v1/webhooks \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"url":"https://your-app.com/webhooks/jurisign",
+           "events":["sign_request.completed","signer.signed"]}'
+event_count: 12
+events:
+- name: sign_request.sent
+  description: The signature request was sent to its signers.
+- name: sign_request.completed
+  description: Every signer has signed.
+- name: sign_request.cancelled
+  description: The signature request was cancelled.
+- name: sign_request.relaunched
+  description: The signature request was relaunched / reminded.
+- name: sign_request.submitted_for_approval
+  description: The signature request entered an internal approval step.
+- name: sign_request.approved
+  description: The signature request was approved.
+- name: sign_request.rejected
+  description: The signature request was rejected at approval.
+- name: signer.signed
+  description: An individual signer has signed.
+- name: signer.declined
+  description: An individual signer declined to sign.
+- name: public_form.submitted
+  description: A respondent submitted a public self-signing form.
+- name: payment.completed
+  description: A pay-at-signature payment was captured.
+- name: payment.failed
+  description: A pay-at-signature payment failed.
+events_source: openapi/jurisign-api-openapi.yml#/paths/~1webhooks/post/requestBody - the enum is closed in the spec.
+security:
+  signing: HMAC-SHA256
+  secret_delivery: >-
+    The signing secret is returned once, in the 201 response to createWebhook, and is never shown again. Rotate it
+    with POST /webhooks/{id}/regenerate-secret; the old secret stops working immediately.
+  header:
+    name: X-Jurisign-Signature
+    format: 'sha256=<hex>'
+    source: https://www.jurisign.fr/developpeurs
+  documentation_conflict:
+    description: >-
+      The two published pages disagree on the header name. The developer page (current, matching the v3.24.1 spec
+      era) shows `X-Jurisign-Signature: sha256=…`; the older integration guide says to check `X-Signature`.
+      Recorded as a conflict rather than resolved, because JuriSign publishes both and neither is in the OpenAPI.
+    developer_page: 'X-Jurisign-Signature: sha256=…'
+    integration_guide: X-Signature
+retry_policy:
+  attempts: 8
+  window: ~42 hours
+  source: https://www.jurisign.fr/developpeurs
+  statement: '"Signes HMAC-SHA256, 8 tentatives sur ~42 h. Une panne chez vous ne perd pas l''evenement."'
+  documentation_conflict:
+    description: >-
+      The integration guide states an older, smaller policy - 3 automatic attempts at 1 min, 5 min and 30 min.
+      The developer page states 8 attempts over roughly 42 hours. Both are published; the 8/42h figure is the one
+      the provider markets as current and is corroborated by the WebhookLog schema, which carries `attempts` and
+      `next_retry_at` fields.
+    integration_guide: 3 attempts (1 min, 5 min, 30 min)
+    developer_page: 8 attempts over ~42 hours
+observability:
+  operation: getWebhookLogs
+  path: /webhooks/{id}/logs
+  log_fields: [id, event, status, response_status, attempts, next_retry_at, created_at]
+  log_status_enum: [success, pending, failed]
+  endpoint_stats: 'WebhookEndpoint carries a stats object: success, failed, pending counts.'
+sandbox_behaviour:
+  webhooks_fire: true
+  note: >-
+    Webhooks are delivered for real even with a sandbox_ token, deliberately - "un webhook qu'on ne recoit pas ne
+    prouve rien."

@@ -1,9 +1,17 @@
-name: JuriSign API
+name: JuriSign
+aid: jurisign
 description: >-
-  eIDAS-compliant electronic signature REST API built and hosted in France. Provides document upload, sign requests,
-  templates, bulk campaigns, public self-signing forms, webhooks, and audit proof downloads, with a free sandbox.
-  Signature level is Simple Electronic Signature (SES) under eIDAS Regulation (EU) 910/2014.
-url: https://raw.githubusercontent.com/api-evangelist/jurisign-api/refs/heads/main/apis.yml
+  eIDAS-compliant electronic signature API built, operated and hosted in France by PCFRANCE. The 46-operation
+  REST contract covers PDF upload with multi-file merge, multi-signer signature requests with email or SMS OTP
+  verification, pixel-placed signature zones, reusable templates, bulk campaigns, shareable public self-signing
+  forms, pay-at-signature collection through Stripe Connect, HMAC-signed webhooks across twelve events, and
+  download of both the signed PDF and its SHA-256 chained audit proof. Signature level is Simple Electronic
+  Signature (SES) under eIDAS Regulation (EU) 910/2014; the provider states in its own GDPR Article 28 annex that
+  it is not a qualified trust service provider and issues neither advanced nor qualified signatures. Bearer
+  tokens carry one of five restrictable scopes, an Idempotency-Key makes the billable write safely repeatable,
+  and a free sandbox needs no credit card. All data stays in the European Union.
+image: https://www.jurisign.fr/images/icons/icon-192x192.png
+url: https://raw.githubusercontent.com/api-evangelist/jurisign/refs/heads/main/apis.yml
 created: '2026-08-31'
 modified: '2026-08-31'
 specificationVersion: '0.21'
@@ -18,12 +26,17 @@ tags:
   - gdpr
   - france
   - legaltech
+  - identity-verification
+  - audit-trail
+  - data-residency-eu
 apis:
   - name: JuriSign REST API
     description: >-
-      Documented, versioned REST API (OpenAPI 3.0.3) for eIDAS-compliant electronic signatures: documents, sign
-      requests, templates, bulk campaigns, public forms, webhooks, account, and authentication. Bearer token auth with a
-      free sandbox token flow.
+      Documented, versioned REST API (OpenAPI 3.0.3, 46 operations across 8 tags) for eIDAS SES electronic
+      signatures: documents, sign requests, templates, bulk campaigns, public forms, account credits, webhooks
+      and authentication. Bearer token auth with five restrictable scopes, an Idempotency-Key on sign-request
+      creation, page-number pagination, and a free sandbox token flow that neutralises real delivery and billing
+      while still firing webhooks.
     humanURL: https://www.jurisign.fr/developpeurs
     baseURL: https://www.jurisign.fr/api/v1
     tags:
@@ -39,20 +52,98 @@ apis:
       - legaltech
     properties:
       - type: OpenAPI
+        url: openapi/jurisign-api-openapi.yml
+      - type: OpenAPI
         url: https://www.jurisign.fr/api/openapi.json
+      - type: DeveloperPortal
+        url: https://www.jurisign.fr/developpeurs
       - type: Documentation
         url: https://www.jurisign.fr/api/docs
-      - type: Documentation
-        url: https://www.jurisign.fr/api/guide
-      - type: Documentation
+      - type: APIReference
         url: https://www.jurisign.fr/api/swagger
-      - type: Documentation
-        url: https://www.jurisign.fr/developpeurs
+      - type: GettingStarted
+        url: https://www.jurisign.fr/api/guide
+      - type: Overlay
+        url: overlays/jurisign-api-overlay.yaml
+      - type: Examples
+        url: examples/jurisign-examples.yml
+      - type: DataModel
+        url: data-model/jurisign-data-model.yml
 maintainers:
-  - FN: JuriSign API
+  - FN: JuriSign (PCFRANCE)
+    email: support@jurisign.fr
     url: https://www.jurisign.fr
-generated:
-  by: apis.io/add
-  model: claude-opus-4-8
-  confidence: 95
-  at: '2026-08-31T09:33:17.005Z'
+common:
+- type: DeveloperPortal
+  url: https://www.jurisign.fr/developpeurs
+- type: Documentation
+  url: https://www.jurisign.fr/api/docs
+- type: APIReference
+  url: https://www.jurisign.fr/api/swagger
+- type: GettingStarted
+  url: https://www.jurisign.fr/api/guide
+- type: Support
+  url: https://www.jurisign.fr/contact
+- type: HelpCenter
+  url: https://www.jurisign.fr/aide
+- type: Pricing
+  url: https://www.jurisign.fr/tarifs
+- type: SignUp
+  url: https://www.jurisign.fr/register
+- type: Login
+  url: https://www.jurisign.fr/login
+- type: TermsOfService
+  url: https://www.jurisign.fr/cgu
+- type: PrivacyPolicy
+  url: https://www.jurisign.fr/confidentialite
+- type: Authentication
+  url: authentication/jurisign-authentication.yml
+- type: OAuthScopes
+  url: scopes/jurisign-scopes.yml
+- type: Conventions
+  url: conventions/jurisign-conventions.yml
+- type: Idempotency
+  url: conventions/jurisign-conventions.yml
+- type: ErrorCatalog
+  url: errors/jurisign-problem-types.yml
+- type: RateLimits
+  url: rate-limits/jurisign-rate-limits.yml
+- type: Plans
+  url: plans/jurisign-plans-pricing.yml
+- type: Sandbox
+  url: sandbox/jurisign-sandbox.yml
+- type: Webhooks
+  url: asyncapi/jurisign-webhooks.yml
+- type: Lifecycle
+  url: lifecycle/jurisign-lifecycle.yml
+- type: Conformance
+  url: conformance/jurisign-conformance.yml
+- type: Compliance
+  url: conformance/jurisign-conformance.yml
+- type: DataModel
+  url: data-model/jurisign-data-model.yml
+- type: Examples
+  url: examples/jurisign-examples.yml
+- type: Overlay
+  url: overlays/jurisign-api-overlay.yaml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/jurisign-llms.txt
+- type: Packages
+  url: packages/jurisign-packages.yml
+- type: WellKnown
+  url: well-known/jurisign-well-known.yml
+- type: SecurityTxt
+  url: well-known/jurisign-security.txt
+- type: Security
+  url: security/jurisign-vulnerability-disclosure.yml
+- type: VulnerabilityDisclosure
+  url: security/jurisign-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/jurisign-domain-security.yml
+x-enrichment:
+  date: '2026-08-31'
+  status: enriched
+  artifacts_added: 26
+  pass: local-v1

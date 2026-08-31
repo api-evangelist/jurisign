@@ -1,0 +1,93 @@
+# JuriSign
+
+> eIDAS-compliant electronic signature REST API, built and hosted in France by PCFRANCE. 46 documented operations
+> cover document upload, multi-signer signature requests with email or SMS OTP verification, reusable templates,
+> bulk campaigns, public self-signing forms, pay-at-signature, signed webhooks, and audit-proof download. Signature
+> level is Simple Electronic Signature (SES) under eIDAS Regulation (EU) 910/2014 — the provider states plainly it
+> is not a qualified trust service provider and issues neither advanced nor qualified signatures. A free sandbox
+> needs no credit card.
+
+Base URL: https://www.jurisign.fr/api/v1
+Auth: Bearer token (Laravel Sanctum) from POST /auth/token, optionally restricted to any of 5 scopes.
+Sandbox: POST /auth/sandbox-token returns a `sandbox_`-prefixed token. Same responses, no real email or SMS, no
+credits spent, webhooks still delivered. The prefix alone is the switch.
+
+## Machine-readable contract
+
+- [OpenAPI 3.0.3](https://www.jurisign.fr/api/openapi.json): 46 operations, 8 tags, unique operationIds, 15 component schemas.
+
+## APIs
+
+- [JuriSign REST API](https://www.jurisign.fr/developpeurs): the whole surface — Authentication, Documents, Sign Requests, Templates, Bulk, Public Forms, Account, Webhooks.
+
+## Docs
+
+- [Developer portal](https://www.jurisign.fr/developpeurs): quickstart, rate limits, error semantics, cost estimator.
+- [Integration guide](https://www.jurisign.fr/api/guide): the full four-step flow with PHP, JavaScript and Python examples.
+- [API reference](https://www.jurisign.fr/api/docs): endpoint reference.
+- [Swagger UI](https://www.jurisign.fr/api/swagger): browser-testable reference.
+- [Pricing](https://www.jurisign.fr/tarifs): plans, per-signature rates and SMS OTP token packs.
+- [Help center](https://www.jurisign.fr/aide): step-by-step guides, video tutorials, FAQ.
+- [GDPR Article 28 processing annex](https://www.jurisign.fr/sous-traitance): sub-processors, security measures, retention.
+- [security.txt](https://www.jurisign.fr/.well-known/security.txt): RFC 9116 disclosure policy.
+
+## The three calls that do the work
+
+1. `POST /documents` — upload a PDF (`file`), or several (`files[]`, up to 10) which are merged in send order.
+2. `POST /sign-requests` — signers, OTP channel, signature zones, expiry. Created in `draft`; nobody is notified yet.
+3. `POST /sign-requests/{id}/send` — this is what emails the signers and spends a credit. Or set `auto_send: true`
+   on step 2 to collapse the two.
+
+The most common integration mistake is stopping after step 2 and expecting emails to go out.
+
+## Things an agent should know before calling
+
+- **Idempotency.** `POST /sign-requests` accepts an `Idempotency-Key` header, organization-scoped, honoured for 24
+  hours. A replay returns the original response with `Idempotent-Replayed: true` and creates nothing new. Reusing a
+  key with a different body returns 409. Failed responses never consume a key.
+- **Reversibility.** A sent request can be cancelled only while `status` is `pending`. A document can be deleted
+  only while `draft`. A bulk campaign cannot be deleted while processing — cancel it. A completed signature is
+  final by design.
+- **Rate limits.** Per minute, per authenticated user: 60 regular calls, 20 document uploads, 30 send/cancel/relaunch,
+  30 webhook-management. Authentication is 10/min per targeted account plus 60/min per calling IP. Exhaustion
+  returns 429 with `Retry-After` — honour it. No `X-RateLimit-*` headers are published.
+- **Errors.** Always JSON, never RFC 9457 problem+json. Shape is `{"message": "...", "errors": {"field.path": [...]}}`.
+  422 itemises each failed field by dot-notation path such as `signers.0.email`.
+- **Pagination.** `page` and `per_page` (default 20). Responses carry `data[]` plus
+  `meta{current_page,last_page,per_page,total}`.
+- **Scopes.** `documents:read`, `documents:write`, `sign-requests:read`, `sign-requests:write`, `webhooks:manage`.
+  Omitting `scopes` grants all five. A missing scope returns 403. `sign-requests:*` also covers templates and bulk.
+- **Webhooks.** 12 events, HMAC-SHA256 signed, 8 delivery attempts over roughly 42 hours, per-endpoint delivery
+  logs, rotatable secret shown once at creation.
+
+## Repository artifacts
+
+- [apis.yml](apis.yml)
+- [OpenAPI](openapi/jurisign-api-openapi.yml)
+- [Authentication](authentication/jurisign-authentication.yml)
+- [Scopes](scopes/jurisign-scopes.yml)
+- [Conventions and reversibility](conventions/jurisign-conventions.yml)
+- [Error catalog](errors/jurisign-problem-types.yml)
+- [Rate limits](rate-limits/jurisign-rate-limits.yml)
+- [Plans and pricing](plans/jurisign-plans-pricing.yml)
+- [Sandbox](sandbox/jurisign-sandbox.yml)
+- [Webhook catalog](asyncapi/jurisign-webhooks.yml)
+- [Data model](data-model/jurisign-data-model.yml)
+- [Lifecycle](lifecycle/jurisign-lifecycle.yml)
+- [Conformance](conformance/jurisign-conformance.yml)
+- [Well-known](well-known/jurisign-well-known.yml)
+- [Packages](packages/jurisign-packages.yml)
+- [MCP candidate](mcp/jurisign-mcp.yml)
+- [Agent skills](skills/_index.yml)
+
+## Not published
+
+No SDK in any language, and the provider says that is deliberate — plain REST/JSON against your own HTTP client.
+No MCP server, no A2A agent card, no GraphQL, no gRPC, no SOAP/WSDL, no AsyncAPI document, no CLI, no public
+Postman collection, no dated changelog, no status page, no GitHub organization, and no SOC 2 / ISO 27001
+attestation.
+
+## Generation
+
+Generated by the API Evangelist enrichment pipeline on 2026-08-31 from JuriSign's own published OpenAPI, developer
+page, integration guide, pricing page and GDPR annex. Not authored or endorsed by JuriSign.

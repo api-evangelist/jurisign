@@ -1,0 +1,52 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/developpeurs
+package_count: 0
+official_sdk_count: 0
+packages: []
+note: >-
+  No first-party client library exists on any public registry, and that is a stated product decision rather than a
+  gap. The developer page says verbatim: "Pas de SDK a installer, et c'est voulu : l'API est du REST et du JSON,
+  votre client HTTP habituel suffit - Guzzle, axios, requests, ou l'equivalent dans votre langage. Rien de
+  proprietaire a maintenir chez vous." ("No SDK to install, and that is deliberate.") The integration guide ships
+  worked examples in PHP, JavaScript and Python against a plain HTTP client instead.
+registries_probed:
+- registry: npm
+  query: jurisign
+  endpoint: https://registry.npmjs.org/-/v1/search?text=jurisign
+  status: 200
+  results: 0
+- registry: pypi
+  query: jurisign
+  endpoint: https://pypi.org/pypi/jurisign/json
+  status: 404
+  results: 0
+- registry: packagist
+  query: jurisign
+  endpoint: https://packagist.org/search.json?q=jurisign
+  status: 200
+  results: 0
+  note: Matches returned are unrelated third-party signing packages, none published by JuriSign or PCFRANCE.
+- registry: rubygems
+  query: jurisign
+  endpoint: https://rubygems.org/api/v1/search.json?query=jurisign
+  status: 200
+  results: 0
+- registry: crates.io
+  query: jurisign
+  endpoint: https://crates.io/api/v1/crates?q=jurisign
+  status: 200
+  results: 0
+- registry: nuget
+  query: jurisign
+  endpoint: https://azuresearch-usnc.nuget.org/query?q=jurisign
+  status: 200
+  results: 0
+- registry: github
+  query: jurisign
+  endpoint: https://api.github.com/users/jurisign
+  status: 404
+  results: 0
+  note: >-
+    No JuriSign / PCFRANCE GitHub organization exists. The only public repositories matching the name are the
+    API Evangelist catalog repos, which are ours, not the provider's.

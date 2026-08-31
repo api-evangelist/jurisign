@@ -1,0 +1,222 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/developpeurs
+sources:
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/api/guide
+- openapi/jurisign-api-openapi.yml
+api: JuriSign REST API
+base_url: https://www.jurisign.fr/api/v1
+
+authentication:
+  style: bearer-token
+  header: 'Authorization: Bearer {token}'
+  issuer: POST /auth/token (Laravel Sanctum personal access token)
+  scoped: true
+  scopes_artifact: scopes/jurisign-scopes.yml
+  detail_artifact: authentication/jurisign-authentication.yml
+
+idempotency:
+  supported: true
+  header: Idempotency-Key
+  scope: organization
+  retention: 24 hours
+  operations:
+  - operationId: createSignRequest
+    method: POST
+    path: /sign-requests
+  replay_signal:
+    header: 'Idempotent-Replayed: true'
+    description: >-
+      A replayed call returns the original response - same body, same status - with this header set, and no second
+      sign request is created, so no second SMS is billed.
+  conflict:
+    status: 409
+    condition: Same Idempotency-Key replayed with a DIFFERENT request body.
+    remediation: Use a new key, or replay the original body unchanged. The docs call this an integration bug, not a retry.
+  failed_requests_consume_key: false
+  source: openapi/jurisign-api-openapi.yml#/paths/~1sign-requests/post/parameters/0
+  note: >-
+    Idempotency is offered on the one write that costs money and cannot be undone once sent - creating a signature
+    request. It is not offered on document upload, bulk campaign launch, or webhook registration.
+
+pagination:
+  style: page-number
+  request_params:
+  - name: page
+    default: 1
+  - name: per_page
+    default: 20
+    description: Page size, adjustable.
+  response_envelope:
+    data: array of resources
+    meta:
+      current_page: integer
+      last_page: integer
+      per_page: integer
+      total: integer
+  example: GET /api/v1/sign-requests?per_page=50&page=2
+  applies_to: All list endpoints (documents, sign-requests, templates, bulk-templates, bulk-campaigns, public-forms, webhooks, webhook logs).
+  source: https://www.jurisign.fr/developpeurs
+
+response_envelope:
+  single_resource: '{ "data": { ... } }'
+  collection: '{ "data": [ ... ], "meta": { ... } }'
+  action_result: '{ "message": "...", "data": { ... } }'
+  sandbox_marker: '"_sandbox": true is present on every response produced with a sandbox_ token.'
+
+error_envelope:
+  format: laravel-validation
+  rfc9457: false
+  content_type: application/json
+  shape: '{ "message": "human-readable message", "errors": { "field.path": ["message", ...] } }'
+  note: >-
+    Errors are always JSON with a readable `message`. Validation failures (422) itemise each field under `errors`
+    using dot-notation paths such as `signers.0.email`. This is Laravel's native validation envelope, not RFC 9457
+    problem+json - no `type`, `title`, `status`, `detail` or `instance` members, and no application/problem+json
+    content type anywhere in the spec.
+  catalog_artifact: errors/jurisign-problem-types.yml
+
+rate_limit_signaling:
+  status: 429
+  header: Retry-After
+  standard_headers: false
+  detail_artifact: rate-limits/jurisign-rate-limits.yml
+
+versioning:
+  style: uri-path
+  current: v1
+  path_prefix: /api/v1
+  product_version: 3.24.1
+  breaking_change_policy: not published
+  detail_artifact: lifecycle/jurisign-lifecycle.yml
+
+request_id_tracing:
+  supported: unknown
+  note: >-
+    No correlation / request-id header is documented in the OpenAPI, the developer page or the integration guide,
+    and none was observed on the unauthenticated GET /api/v1 status response. Recorded as unknown rather than
+    absent because only one endpoint could be exercised without credentials.
+
+field_expansion:
+  supported: false
+  note: >-
+    No `expand`, `fields` or sparse-fieldset parameter appears in the spec. Detail is served by dedicated shapes
+    instead - `SignRequestDetailed` and `TemplateDetailed` extend their base schema on the single-resource GET.
+
+metadata:
+  supported: true
+  field: metadata
+  operations: [createSignRequest]
+  note: Free-form metadata may be attached when creating a sign request.
+
+content_types:
+  json: application/json
+  upload: multipart/form-data
+  binary_download: application/pdf
+  upload_limits:
+    max_file_size: 20 MB
+    max_files_per_call: 10
+    merge_behaviour: >-
+      files[] merges multiple PDFs, images and Word documents into a single PDF in send order and returns
+      merged_from with the count actually merged. The singular `file` field is unchanged.
+
+dry_run_mode:
+  supported: true
+  mechanism: sandbox token
+  detail_artifact: sandbox/jurisign-sandbox.yml
+  note: >-
+    There is no per-request dry-run flag. Rehearsal is done with a separate `sandbox_`-prefixed token issued by
+    POST /auth/sandbox-token: identical API responses, no real emails or SMS, no credits deducted, no invoices,
+    and webhooks that still fire for real. Sandbox and production data are isolated from each other.
+
+reversibility:
+  grade: verified
+  applicable: true
+  note: >-
+    Every consequential write on this API has a published reversal path, and each one states the condition under
+    which it still works. The windows are state-based rather than clock-based, and the provider states them in the
+    operation descriptions themselves.
+  surfaces:
+  - write_operation: createSignRequest
+    write_path: POST /sign-requests
+    reversal: deleteDocument is not the reversal; a created request is created in `draft` and is simply never sent.
+    window: >-
+      Creation does not notify anyone. The docs make this explicit: "La creation d'une demande de signature ne
+      declenche pas l'envoi des notifications. La demande est creee en statut draft." Nothing is spent until send.
+    consequence_before_send: none
+    docs: https://www.jurisign.fr/api/guide
+    grade: verified
+  - write_operation: sendSignRequest
+    write_path: POST /sign-requests/{id}/send
+    reversal: cancelSignRequest
+    reversal_path: POST /sign-requests/{id}/cancel
+    window: >-
+      Only requests in `pending` status can be cancelled. Once every signer has signed the request is `completed`
+      and there is no cancel path - the signature is final and the proof file is generated.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  - write_operation: uploadDocument
+    write_path: POST /documents
+    reversal: deleteDocument
+    reversal_path: DELETE /documents/{id}
+    window: Only documents in `draft` status can be deleted. A document attached to a sent request cannot be removed.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  - write_operation: launchBulkCampaign
+    write_path: POST /bulk-campaigns/{id}/launch
+    reversal: cancelBulkCampaign
+    reversal_path: POST /bulk-campaigns/{id}/cancel
+    secondary_reversal: retryBulkCampaign resets recipients in error back to pending so the campaign can be launched again.
+    window: >-
+      A campaign cannot be deleted while it is processing - DELETE /bulk-campaigns/{id} returns 422 in that state.
+      Cancel is the operation available mid-flight.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  - write_operation: createToken
+    write_path: POST /auth/token
+    reversal: revokeToken
+    reversal_path: DELETE /auth/token
+    window: Any time; revokes the token used in the request.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  - write_operation: createPublicForm
+    write_path: POST /public-forms
+    reversal: rotatePublicFormToken (invalidate a leaked link) or deletePublicForm
+    reversal_path: POST /public-forms/{id}/rotate-token
+    window: >-
+      Immediate - "The previous link stops working immediately - use this if a link leaked or was shared too
+      widely." Signatures already collected through the old link are not undone.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  - write_operation: createWebhook
+    write_path: POST /webhooks
+    reversal: regenerateWebhookSecret / deleteWebhook
+    reversal_path: POST /webhooks/{id}/regenerate-secret
+    window: Immediate - the old secret stops being valid as soon as a new one is generated.
+    docs: https://www.jurisign.fr/api/openapi.json
+    grade: verified
+  irreversible:
+  - operation: A completed signature
+    note: >-
+      Once a sign request reaches `completed` the signed PDF and its SHA-256 chained audit proof exist and cannot
+      be revoked through the API. This is the intended property of the product, not a gap.
+  - operation: Payment collected at signature
+    note: >-
+      Where the sign-then-pay option is used, funds go directly to the organization's own Stripe account minus a
+      fixed 0.90 EUR platform fee. No refund or void operation exists in this API; a refund is a Stripe-side action.
+  data_retention:
+    export_window_after_account_closure: 30 days
+    deletion_after: >-
+      Data is deleted after the 30-day window, except records the law requires be kept - billing data for 10 years.
+    extended_archiving_option: 10 years (Entreprise commercial option, surfaced as the read-only `extended_retention` flag on SignRequest)
+    source: https://www.jurisign.fr/sous-traitance
+
+cross_references:
+  errors: errors/jurisign-problem-types.yml
+  lifecycle: lifecycle/jurisign-lifecycle.yml
+  authentication: authentication/jurisign-authentication.yml
+  scopes: scopes/jurisign-scopes.yml
+  rate_limits: rate-limits/jurisign-rate-limits.yml
+  sandbox: sandbox/jurisign-sandbox.yml
+  webhooks: asyncapi/jurisign-webhooks.yml

@@ -1,0 +1,33 @@
+generated: '2026-08-31'
+method: generated
+source: openapi/jurisign-api-openapi.yml + https://www.jurisign.fr/developpeurs + https://www.jurisign.fr/api/guide
+provider: JuriSign
+api: JuriSign REST API
+base_url: https://www.jurisign.fr/api/v1
+note: >-
+  JuriSign publishes no skills, no AGENTS.md and no llms.txt of its own; probed https://www.jurisign.fr/llms.txt
+  (404). These three skills were generated from the provider's published OpenAPI and documentation. Every
+  operationId referenced was verified present in the 46-operation spec - none were invented.
+skill_count: 3
+skills:
+- name: jurisign-send-document-for-signature
+  file: jurisign-send-document-for-signature.md
+  description: The core three-call flow - upload, create, send - plus tracking, download of the signed PDF and audit proof, and how to back out.
+  operations: [createSandboxToken, createToken, uploadDocument, createSignRequest, sendSignRequest, getSignRequest, cancelSignRequest, downloadSignedPdf, downloadProof]
+  consequential_operation: sendSignRequest
+- name: jurisign-receive-signature-webhooks
+  file: jurisign-receive-signature-webhooks.md
+  description: Register an endpoint, verify the HMAC signature, handle the twelve events, survive the retry policy, and diagnose from the delivery log.
+  operations: [createWebhook, listWebhooks, updateWebhook, deleteWebhook, getWebhookLogs, regenerateWebhookSecret]
+  consequential_operation: regenerateWebhookSecret
+- name: jurisign-bulk-and-public-forms
+  file: jurisign-bulk-and-public-forms.md
+  description: Batch sends via bulk campaigns versus shareable public forms - which to pick, how to launch safely, and how to close a leaked link.
+  operations: [createBulkTemplate, listBulkTemplates, getBulkTemplate, updateBulkTemplate, deleteBulkTemplate, createBulkCampaign, launchBulkCampaign, cancelBulkCampaign, retryBulkCampaign, getBulkCampaign, exportBulkCampaignResults, deleteBulkCampaign, createPublicForm, getPublicForm, updatePublicForm, rotatePublicFormToken, deletePublicForm, listTemplates, createSignRequestFromTemplate]
+  consequential_operation: launchBulkCampaign
+shared_rules:
+  rehearsal: Use a sandbox_ token from POST /auth/sandbox-token; identical responses, no messages, no credits, webhooks still fire.
+  idempotency: Only createSignRequest accepts an Idempotency-Key (24h, org-scoped, 409 on key reuse with a different body).
+  errors: 'JSON only, never problem+json. Shape: {"message": ..., "errors": {"field.path": [...]}}.'
+  rate_limits: 60/min regular, 20/min uploads, 30/min send-cancel-relaunch, 30/min webhook management, per authenticated user. 429 carries Retry-After.
+  least_privilege: Request only the scopes the flow needs on POST /auth/token; omitting `scopes` grants all five.

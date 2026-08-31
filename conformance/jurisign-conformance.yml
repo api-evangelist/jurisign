@@ -1,0 +1,171 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/api/openapi.json
+sources:
+- https://www.jurisign.fr/api/openapi.json
+- https://www.jurisign.fr/sous-traitance
+- https://www.jurisign.fr/confidentialite
+- https://www.jurisign.fr/.well-known/security.txt
+- https://www.jurisign.fr/tarifs
+sector: legaltech / electronic signature (EU)
+regulatory_regime: eu-eidas + gdpr
+
+domain_standard:
+  standard: eIDAS - Regulation (EU) No 910/2014
+  level: SES (Simple Electronic Signature / Signature Electronique Simple)
+  declared_in_contract: true
+  evidence:
+    location: openapi/jurisign-api-openapi.yml#/info/description
+    quote: 'Electronic signature API (eIDAS SES level) with OTP verification (email or SMS).'
+  corroboration:
+  - location: https://www.jurisign.fr/tarifs
+    quote: 'eIDAS SES (UE) N°910/2014'
+  - location: https://www.jurisign.fr/sous-traitance
+    quote: >-
+      "JuriSign fournit une signature electronique simple (SES) au sens du reglement eIDAS. PCFRANCE n'a pas la
+      qualite de prestataire de services de confiance qualifie et ne delivre ni signature avancee ni signature
+      qualifiee."
+  scope_limit_declared: true
+  scope_limit_note: >-
+    This is the honest and unusual part. The provider states in its own DPA that it is NOT a qualified trust
+    service provider and issues neither advanced (AdES) nor qualified (QES) signatures, and tells the customer to
+    check that SES suits the acts being signed. A buyer needing AdES/QES under eIDAS Article 25/26 cannot use this
+    API, and JuriSign says so rather than leaving it ambiguous.
+  eu_trusted_list: not listed (consistent with the provider's own non-qualified declaration)
+
+conformance:
+- id: eidas-ses
+  name: eIDAS SES - Regulation (EU) No 910/2014
+  conforms: true
+  evidence:
+    type: contract-declaration
+    location: openapi info.description; corroborated on /tarifs and /sous-traitance
+  note: Simple Electronic Signature level only. Not AdES, not QES, not a qualified trust service provider.
+- id: gdpr-art28
+  name: GDPR (EU) 2016/679 Article 28 processing agreement
+  conforms: true
+  evidence:
+    type: published-document
+    location: https://www.jurisign.fr/sous-traitance
+    detail: >-
+      A full Article 28 processing annex naming the controller/processor split, the categories of data and data
+      subjects, the sub-processor list with role/data/location, the 48-hour breach notification undertaking, the
+      30-day post-termination export window, and a once-yearly customer audit right.
+  note: >-
+    Also states no transfer of documents, proof files, audit logs or signer data outside the EU, and that
+    documents are never used for commercial, statistical or model-training purposes.
+- id: gdpr-subprocessors-published
+  name: Named sub-processor register
+  conforms: true
+  evidence:
+    type: published-document
+    location: https://www.jurisign.fr/sous-traitance
+    detail: 'IONOS SARL (hosting + transactional mail), OVHcloud (SMS routing), Brevo/Sendinblue (mail failover) - all EU.'
+- id: rfc9116
+  name: RFC 9116 security.txt
+  conforms: true
+  evidence:
+    type: probed
+    location: https://www.jurisign.fr/.well-known/security.txt
+    http_status: 200
+    detail: 'Contact, Expires (2027-05-09), Canonical, Policy and Preferred-Languages all present.'
+- id: rfc9457
+  name: RFC 9457 Problem Details for HTTP APIs
+  conforms: false
+  evidence:
+    type: derived
+    location: openapi/jurisign-api-openapi.yml
+    detail: >-
+      No application/problem+json media type and no type/title/status/detail/instance members anywhere in the
+      46-operation spec. Errors use Laravel's message+errors envelope.
+- id: oauth2
+  name: OAuth 2.0
+  conforms: false
+  evidence:
+    type: probed
+    location: https://www.jurisign.fr/.well-known/oauth-authorization-server
+    http_status: 404
+    detail: >-
+      Bearer tokens are issued by a password grant against POST /auth/token (Laravel Sanctum). There is no
+      authorization server, no consent flow, and no RFC 8414 metadata. Token abilities are called "scopes" but
+      the protocol is not OAuth.
+- id: oidc
+  name: OpenID Connect
+  conforms: false
+  evidence:
+    type: probed
+    location: https://www.jurisign.fr/.well-known/openid-configuration
+    http_status: 404
+  note: SSO is listed as an Entreprise-tier feature on the pricing page but no protocol or metadata endpoint is published.
+- id: idempotency
+  name: Idempotent request replay (Idempotency-Key)
+  conforms: true
+  evidence:
+    type: derived
+    location: openapi/jurisign-api-openapi.yml#/paths/~1sign-requests/post/parameters/0
+    detail: >-
+      Idempotency-Key header on createSignRequest, org-scoped, honoured 24 hours, 409 on key reuse with a
+      different body, Idempotent-Replayed:true on a replay, and failed responses never consume a key.
+  note: Offered on one operation only - the write that spends money and sends real messages.
+- id: pagination
+  name: Consistent collection pagination
+  conforms: true
+  evidence:
+    type: derived
+    location: openapi/jurisign-api-openapi.yml
+    detail: 'page/per_page request params, data[] + meta{current_page,last_page,per_page,total} on every list endpoint.'
+- id: webhook-hmac
+  name: HMAC-signed webhook delivery
+  conforms: true
+  evidence:
+    type: searched
+    location: https://www.jurisign.fr/developpeurs
+    detail: 'HMAC-SHA256 signature header, secret shown once, rotatable, 8 delivery attempts over ~42h, per-endpoint delivery logs.'
+- id: openapi-3
+  name: OpenAPI 3.0.3
+  conforms: true
+  evidence:
+    type: probed
+    location: https://www.jurisign.fr/api/openapi.json
+    http_status: 200
+    detail: '46 operations, 8 tags, unique operationIds on every operation, summaries and descriptions throughout, 15 reusable component schemas.'
+- id: fapi
+  name: FAPI
+  conforms: false
+  evidence: {type: not-applicable, detail: Not a financial-grade API; out of sector.}
+- id: scim
+  name: SCIM
+  conforms: false
+  evidence: {type: derived, detail: 'No urn:ietf:params:scim:schemas:* URN and no /Users or /Groups surface in the spec.'}
+- id: odata
+  name: OData
+  conforms: false
+  evidence: {type: derived, detail: No $metadata surface and no OData query options.}
+
+compliance_claims:
+- claim: eIDAS SES conformity, Regulation (EU) No 910/2014
+  published_at: https://www.jurisign.fr/tarifs
+- claim: SHA-256 audit trail with cryptographic chaining and integrity verification
+  published_at: https://www.jurisign.fr/sous-traitance
+- claim: Data hosted in the European Union, no transfer outside the EU
+  published_at: https://www.jurisign.fr/sous-traitance
+- claim: GDPR Article 28 processing annex, PDF downloadable
+  published_at: https://www.jurisign.fr/sous-traitance
+- claim: 48-hour data-breach notification to the customer
+  published_at: https://www.jurisign.fr/sous-traitance
+- claim: Documents never used for commercial, statistical or AI model-training purposes
+  published_at: https://www.jurisign.fr/sous-traitance
+
+certifications:
+  audited_certifications: none published
+  note: >-
+    No SOC 2, ISO 27001, ISO 27701, PCI DSS, HIPAA or FedRAMP attestation is published anywhere on the site, and
+    there is no trust center. Compliance posture rests on the eIDAS SES declaration and a detailed GDPR Article 28
+    annex, both self-published. Recorded as an absence rather than inferred from the regulated sector.
+
+legal_entity:
+  operator: PCFRANCE (entreprise individuelle)
+  address: 1 allee du Gate Soie, 37390 Charentilly, France
+  siret: '392 232 054 00040'
+  brand: JuriSign (registered trademark, INPI no. 5233493)
+  source: https://www.jurisign.fr/sous-traitance

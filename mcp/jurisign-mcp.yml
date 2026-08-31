@@ -1,0 +1,97 @@
+generated: '2026-08-31'
+method: derived
+status: candidate
+source: openapi/jurisign-api-openapi.yml
+search_note: >-
+  No MCP server is published by JuriSign. Probed https://www.jurisign.fr/mcp (404), https://www.jurisign.fr/api/mcp
+  (404 JSON route-not-found), and mcp.jurisign.fr (no TLS certificate for that host). No MCP server appears on npm,
+  in the JuriSign docs, or on any registry - and there is no JuriSign GitHub organization. The tool list below is a
+  CANDIDATE derived from the published OpenAPI operations, not something the provider ships.
+deployment:
+  mode: none
+  auth: api-key
+  auth_note: >-
+    If a server were built, it would carry a JuriSign bearer token issued by POST /auth/token, ideally a
+    scope-restricted one. The provider markets scoped tokens for exactly this pattern.
+  verified: derived
+server:
+  name: jurisign
+  transport: null
+  url: null
+tool_count: 20
+tools_note: >-
+  A curated candidate surface, not one tool per operation. The 46 operations collapse to the flows an agent would
+  actually drive; each tool names the backing operationId so its real input schema can be read from the spec.
+tools:
+- name: create_sandbox_token
+  description: Obtain a sandbox bearer token that never sends real email/SMS and never spends signature credits.
+  source_operation: openapi/jurisign-api-openapi.yml#createSandboxToken
+- name: get_api_status
+  description: Check API availability and the documented docs URL.
+  source_operation: openapi/jurisign-api-openapi.yml#getStatus
+- name: get_account_credits
+  description: Read the organization's real-time signature credit balance.
+  source_operation: openapi/jurisign-api-openapi.yml#getAccountCredits
+- name: upload_document
+  description: Upload a PDF (or merge up to 10 PDFs/images/Word files) and return the document id and page count.
+  source_operation: openapi/jurisign-api-openapi.yml#uploadDocument
+- name: list_documents
+  description: List uploaded documents.
+  source_operation: openapi/jurisign-api-openapi.yml#listDocuments
+- name: get_document
+  description: Retrieve a single document's metadata including its SHA-256 file hash.
+  source_operation: openapi/jurisign-api-openapi.yml#getDocument
+- name: download_document
+  description: Download the stored PDF.
+  source_operation: openapi/jurisign-api-openapi.yml#downloadDocument
+- name: delete_document
+  description: Delete a draft document. Fails once the document is attached to a sent request.
+  source_operation: openapi/jurisign-api-openapi.yml#deleteDocument
+- name: create_sign_request
+  description: >-
+    Create a signature request with signers, OTP channel, signature zones, expiry and optional pay-at-signature.
+    Supports Idempotency-Key. Creates in draft - does not notify anyone.
+  source_operation: openapi/jurisign-api-openapi.yml#createSignRequest
+- name: send_sign_request
+  description: Send a draft signature request to its signers. This is the call that spends credits and sends messages.
+  source_operation: openapi/jurisign-api-openapi.yml#sendSignRequest
+- name: cancel_sign_request
+  description: Cancel a pending signature request. Only works while status is pending.
+  source_operation: openapi/jurisign-api-openapi.yml#cancelSignRequest
+- name: get_sign_request
+  description: Read a signature request's status, progress and per-signer state.
+  source_operation: openapi/jurisign-api-openapi.yml#getSignRequest
+- name: list_sign_requests
+  description: List signature requests with pagination.
+  source_operation: openapi/jurisign-api-openapi.yml#listSignRequests
+- name: download_signed_pdf
+  description: Download the signed PDF once the request is completed.
+  source_operation: openapi/jurisign-api-openapi.yml#downloadSignedPdf
+- name: download_audit_proof
+  description: Download the audit proof PDF - timestamps, IP addresses, OTP records and SHA-256 fingerprints.
+  source_operation: openapi/jurisign-api-openapi.yml#downloadProof
+- name: create_sign_request_from_template
+  description: Create a signature request from a saved template in one call.
+  source_operation: openapi/jurisign-api-openapi.yml#createSignRequestFromTemplate
+- name: list_templates
+  description: List reusable signature-request templates.
+  source_operation: openapi/jurisign-api-openapi.yml#listTemplates
+- name: create_bulk_campaign
+  description: Create a batch send from a bulk template with recipients supplied as JSON.
+  source_operation: openapi/jurisign-api-openapi.yml#createBulkCampaign
+- name: launch_bulk_campaign
+  description: Launch a bulk campaign. Reversible with cancel_bulk_campaign while it is running.
+  source_operation: openapi/jurisign-api-openapi.yml#launchBulkCampaign
+- name: create_webhook
+  description: Register an HTTPS webhook endpoint for signature and payment events. Returns the signing secret once.
+  source_operation: openapi/jurisign-api-openapi.yml#createWebhook
+agent_safety_notes:
+- >-
+  send_sign_request is the consequential boundary. Creating a request is free and silent; sending it spends a
+  signature credit, emails or SMSes real people, and can only be reversed with cancel while status is pending.
+- >-
+  create_sign_request accepts an Idempotency-Key honoured for 24 hours, so a retried tool call cannot double-bill
+  or double-notify.
+- >-
+  A sandbox_-prefixed token makes every one of these tools safe to rehearse: identical responses, no messages, no
+  credits, webhooks still fire.

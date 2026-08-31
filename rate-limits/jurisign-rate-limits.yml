@@ -1,0 +1,53 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/developpeurs
+sources:
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/api/openapi.json
+note: >-
+  Limits are published in two places that agree: the "Limites de debit" panel on the developer page and the
+  OpenAPI `info.description`. All buckets are per minute. The authentication bucket is counted per TARGETED
+  ACCOUNT rather than per IP, which the provider calls out explicitly so that several servers behind one egress
+  address do not throttle each other; a separate 60/minute per-IP bucket sits alongside it.
+limit_count: 6
+enforcement:
+  status_code: 429
+  headers_returned:
+  - name: Retry-After
+    description: Seconds to wait before retrying. The docs instruct clients to honour it rather than retry immediately.
+  standard_ratelimit_headers: false
+  note: >-
+    No `X-RateLimit-*` or RFC 9239-style `RateLimit-*` headers are documented or referenced anywhere in the spec
+    or the developer page. `Retry-After` on a 429 is the only published runtime signal.
+rate_limits:
+- name: Regular calls
+  scope: per-authenticated-user
+  window: 60s
+  limit: 60
+  applies_to: All endpoints not covered by a more specific bucket below.
+- name: Document uploads
+  scope: per-authenticated-user
+  window: 60s
+  limit: 20
+  applies_to: POST /documents
+- name: Send / cancel / relaunch actions
+  scope: per-authenticated-user
+  window: 60s
+  limit: 30
+  applies_to: POST /sign-requests/{id}/send, POST /sign-requests/{id}/cancel, relaunch actions
+- name: Webhook management
+  scope: per-authenticated-user
+  window: 60s
+  limit: 30
+  applies_to: GET/POST/PUT/DELETE /webhooks and /webhooks/{id}/*
+- name: Authentication attempts (per account)
+  scope: per-account
+  window: 60s
+  limit: 10
+  applies_to: POST /auth/token, POST /auth/sandbox-token
+  note: Counted against the account being authenticated, not the calling IP.
+- name: Authentication attempts (per IP)
+  scope: per-ip
+  window: 60s
+  limit: 60
+  applies_to: POST /auth/token, POST /auth/sandbox-token

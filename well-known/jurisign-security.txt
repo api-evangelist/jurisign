@@ -1,0 +1,16 @@
+# JuriSign - Security disclosure policy (RFC 9116)
+# https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:contact@jurisign.fr
+Expires: 2027-05-09T00:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://www.jurisign.fr/.well-known/security.txt
+Policy: https://www.jurisign.fr/confidentialite
+
+# Si vous avez identifie une vulnerabilite de securite, contactez-nous a
+# l'adresse ci-dessus avec une description detaillee. Nous nous engageons a
+# repondre dans les 5 jours ouvres et a vous tenir informe de l'avancement
+# de la correction.
+
+# Periode de divulgation : merci de patienter au moins 90 jours apres notre
+# reponse initiale avant toute publication, sauf accord prealable.

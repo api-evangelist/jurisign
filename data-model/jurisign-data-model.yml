@@ -1,0 +1,185 @@
+generated: '2026-08-31'
+method: derived
+source: openapi/jurisign-api-openapi.yml
+enriched_from: https://www.jurisign.fr/api/guide
+note: >-
+  Derived from the 15 component schemas and the id-reference fields between them. JuriSign's spec inlines nested
+  objects rather than $ref-ing them, so the edges below were read from embedded id-bearing objects (SignRequest
+  carries a `document` object with an id, PublicForm carries a `template` object with an id) and from explicit
+  *_id inputs. Cardinalities that the spec does not state are marked inferred.
+identifiers:
+  style: uuid
+  note: >-
+    Documents, sign requests, signers, templates, bulk templates, bulk campaigns and public forms are all UUIDs
+    (format: uuid in the spec). Webhook endpoints and webhook logs are the exception - they use integer ids.
+  prefixes: none
+  tenancy: >-
+    Every resource is scoped to the organization of the authenticated token. Cross-organization access returns
+    403. Sandbox and live records are additionally isolated from each other by token mode.
+entity_count: 13
+entities:
+- name: Organization
+  schema: AuthUser.organization
+  description: The tenant. Owns every other record and is the boundary for scopes, credits and rate limits.
+  fields: [id, name]
+  relationships:
+  - type: has_many
+    target: AuthUser
+  - type: has_many
+    target: Document
+  - type: has_many
+    target: SignRequest
+- name: AuthUser
+  schema: AuthUser
+  description: An authenticated account within an organization; the actor recorded as created_by on other records.
+  fields: [id, name, email, role, organization]
+  relationships:
+  - type: belongs_to
+    target: Organization
+    via: organization.id
+- name: Document
+  schema: Document
+  description: An uploaded PDF (or a merged set of PDFs/images/Word files) with its page count and SHA-256 file hash.
+  fields: [id, title, original_filename, status, page_count, file_size, file_hash, created_at, created_by]
+  status_enum_source: spec
+  relationships:
+  - type: belongs_to
+    target: AuthUser
+    via: created_by
+  - type: has_many
+    target: SignRequest
+    via: SignRequest.document.id
+    cardinality_note: inferred - the spec models one document per sign request but does not forbid reuse.
+- name: SignRequest
+  schema: SignRequest / SignRequestDetailed
+  description: The signing envelope - a document, its signers, ordering, expiry, optional payment, and its lifecycle status.
+  fields: [id, subject, message, status, signing_order_type, extended_retention, progress, redirect_url, payment, expires_at, sent_at, completed_at, created_at, document, created_by, signers]
+  status_values: [draft, pending, partially_signed, completed, expired, cancelled]
+  status_source: https://www.jurisign.fr/api/guide
+  relationships:
+  - type: has_one
+    target: Document
+    via: document.id
+  - type: has_many
+    target: Signer
+    via: signers[]
+  - type: has_many
+    target: SignatureZone
+    via: zones[] on CreateSignRequestInput
+  - type: has_one
+    target: Payment
+    via: payment
+    optional: true
+  - type: belongs_to
+    target: Template
+    via: createSignRequestFromTemplate (POST /templates/{id}/sign-requests)
+    optional: true
+- name: Signer
+  schema: SignRequest.signers[] / SignRequestDetailed.signers[]
+  description: One party to a signature request, with its OTP channel and per-signer status.
+  fields: [id, name, email, otp_channel, status, signing_order, signed_at]
+  status_values: [pending, notified, signed, declined]
+  otp_channels: [email, sms]
+  relationships:
+  - type: belongs_to
+    target: SignRequest
+- name: SignatureZone
+  schema: SignatureZone
+  description: A placed field on a page - signature, text, date or checkbox - positioned in page percentage coordinates.
+  fields: [page, x, y, width, height, type, label, required, value]
+  coordinate_system: 'Percentage of page (0-100), origin top-left; signer_index binds the zone to a signer.'
+  coordinate_source: https://www.jurisign.fr/api/guide
+  relationships:
+  - type: belongs_to
+    target: SignRequest
+  - type: belongs_to
+    target: Signer
+    via: signer_index
+- name: Payment
+  schema: SignRequest.payment
+  description: An optional sign-then-pay collection attached to a signature request, settled through Stripe Connect.
+  fields: [status, amount_cents, currency, description, checkout_url, paid_at]
+  status_values: [pending, processing, paid, failed, canceled, expired]
+  note: >-
+    The signer is invited to pay only after signing; checkout_url is null until the request is fully signed. Funds
+    go directly to the organization's own Stripe account minus a fixed 0.90 EUR platform fee. Requires an active
+    Stripe Connect account or creation fails with 422.
+  relationships:
+  - type: belongs_to
+    target: SignRequest
+- name: Template
+  schema: Template / TemplateDetailed
+  description: A reusable signature request - signers, zones and options saved once, optionally with the PDF itself.
+  fields: [id, name, description, subject, signing_order_type, expiry_hours, require_selfie, requires_paraph, signer_count, has_document, usage_count, last_used_at, created_at, created_by]
+  relationships:
+  - type: has_many
+    target: SignRequest
+    via: POST /templates/{id}/sign-requests
+  - type: has_many
+    target: PublicForm
+    via: PublicForm.template.id
+- name: BulkTemplate
+  schema: BulkTemplate
+  description: An HTML document template with merge fields, used to personalise one document per recipient in a campaign.
+  fields: [id, name, description, merge_fields, html_content, created_at, created_by]
+  relationships:
+  - type: has_many
+    target: BulkCampaign
+    via: BulkCampaign.template.id
+- name: BulkCampaign
+  schema: BulkCampaign
+  description: A batch send - recipients supplied as JSON, one personalised document each, with launch/cancel/retry control and CSV export.
+  fields: [id, name, status, template, progress, stats, started_at, completed_at, cancelled_at, created_at, created_by]
+  relationships:
+  - type: belongs_to
+    target: BulkTemplate
+    via: template.id
+  - type: has_many
+    target: SignRequest
+    cardinality_note: inferred - one per recipient; the spec exposes aggregate stats rather than the child requests.
+- name: PublicForm
+  schema: PublicForm
+  description: A shareable link backed by a template - each respondent signs their own request without an account.
+  fields: [id, name, status, public_url, template, expires_at, daily_submission_limit, submissions_count, last_submitted_at, created_at]
+  relationships:
+  - type: belongs_to
+    target: Template
+    via: template.id
+  - type: has_many
+    target: SignRequest
+    cardinality_note: inferred - one per submission.
+- name: WebhookEndpoint
+  schema: WebhookEndpoint
+  description: A registered HTTPS receiver with its subscribed events, signing secret and delivery counters.
+  fields: [id, url, secret, events, is_active, created_at, stats]
+  id_type: integer
+  relationships:
+  - type: has_many
+    target: WebhookLog
+    via: GET /webhooks/{id}/logs
+- name: WebhookLog
+  schema: WebhookLog
+  description: One delivery attempt record - the event, its outcome, the receiver's status code, attempt count and next retry time.
+  fields: [id, event, status, response_status, attempts, next_retry_at, created_at]
+  id_type: integer
+  status_values: [success, pending, failed]
+  relationships:
+  - type: belongs_to
+    target: WebhookEndpoint
+supporting_shapes:
+- name: Pagination
+  description: The meta block on every collection response - current_page, last_page, per_page, total.
+- name: MessageResponse
+  description: 'The bare {"message": "..."} shape returned by action endpoints.' 
+- name: CreateSignRequestInput
+  description: The write shape for a signature request - document_id, signers[], zones[], payment, metadata, expiry and ordering.
+core_flow:
+  description: The three-call spine the provider documents on its own developer page.
+  steps:
+  - Upload a document (POST /documents) -> Document.id
+  - Create a signature request against it (POST /sign-requests) -> SignRequest in draft
+  - Send it (POST /sign-requests/{id}/send), or set auto_send:true on creation to collapse the two
+  - Track via webhooks, then download the signed PDF and the audit proof
+  critical_note: >-
+    Creation does not notify anyone. A request stays in draft until send is called - the provider flags this as
+    the single most common integration mistake.

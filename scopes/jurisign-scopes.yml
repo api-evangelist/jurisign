@@ -1,0 +1,61 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/api/openapi.json
+docs: https://www.jurisign.fr/developpeurs
+oauth2: false
+model: bearer-token-abilities
+model_note: >-
+  These are NOT OAuth 2.0 scopes. JuriSign issues Laravel Sanctum personal access tokens and the `scopes` field on
+  POST /auth/token restricts the token's abilities. There is no authorization server, no /authorize or /token
+  OAuth endpoint, no consent screen, and /.well-known/oauth-authorization-server returns 404. The artifact is
+  recorded under the scope vocabulary because the provider publishes a real, enumerable, per-token permission set
+  that an agent must reason about - but it is a token-ability model, and calling it OAuth would be wrong.
+enforcement:
+  description: Every endpoint checks the token's abilities and returns 403 if the required scope is missing.
+  status_on_missing_scope: 403
+default_behaviour:
+  description: >-
+    Omitting `scopes` on POST /auth/token grants all five scopes. This is the documented default and preserves
+    behaviour for integrations written before scopes existed.
+  scopes_granted: all
+request_example: |
+  POST /api/v1/auth/token
+  { "email": "...", "password": "...", "device_name": "my-backoffice",
+    "scopes": ["documents:read", "sign-requests:read"] }
+scope_count: 5
+scopes:
+- name: documents:read
+  description: Read documents - list, retrieve and download uploaded documents.
+  operations: [listDocuments, getDocument, downloadDocument]
+- name: documents:write
+  description: Create and remove documents - upload PDFs (including multi-file merge) and delete drafts.
+  operations: [uploadDocument, deleteDocument]
+- name: sign-requests:read
+  description: >-
+    Read signature requests, and also covers the templates and bulk-* read endpoints, per the spec: "sign-requests:read
+    / sign-requests:write also cover the templates and bulk-* endpoints."
+  operations: [listSignRequests, getSignRequest, downloadSignedPdf, downloadProof, listTemplates, getTemplate, listBulkTemplates, getBulkTemplate, listBulkCampaigns, getBulkCampaign, exportBulkCampaignResults, listPublicForms, getPublicForm]
+- name: sign-requests:write
+  description: >-
+    Create, send, cancel and otherwise mutate signature requests, and also covers the templates and bulk-* write
+    endpoints.
+  operations: [createSignRequest, sendSignRequest, cancelSignRequest, createSignRequestFromTemplate, deleteTemplate, createBulkTemplate, updateBulkTemplate, deleteBulkTemplate, createBulkCampaign, launchBulkCampaign, cancelBulkCampaign, retryBulkCampaign, deleteBulkCampaign, createPublicForm, updatePublicForm, deletePublicForm, rotatePublicFormToken]
+- name: webhooks:manage
+  description: Manage webhook endpoints - list, create, update, delete, read delivery logs and regenerate secrets.
+  operations: [listWebhooks, createWebhook, updateWebhook, deleteWebhook, getWebhookLogs, regenerateWebhookSecret]
+operation_mapping_note: >-
+  The spec names the five scopes and states the templates/bulk coverage rule, but does not annotate each operation
+  with its required scope. The per-scope `operations` lists above apply that stated rule to the operation set; they
+  are a faithful reading of the published rule, not a per-operation assertion by the provider. Least-privilege
+  callers should verify against a 403 in the sandbox.
+use_case_published:
+  description: >-
+    The developer page frames scopes as a least-privilege pattern - "Un jeton en lecture seule pour votre tableau
+    de bord, un autre en ecriture pour vos automatisations."
+  source: https://www.jurisign.fr/developpeurs
+unscoped_operations:
+  note: >-
+    Five operations sit outside the scope model. The three authentication operations issue or revoke the token
+    itself and so cannot require one; getStatus is unauthenticated; getAccountCredits is documented as scoped
+    strictly to the authenticated token's organization but is not attributed to a named scope in the spec.
+  operations: [createToken, createSandboxToken, revokeToken, getStatus, getAccountCredits]

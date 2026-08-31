@@ -1,0 +1,66 @@
+generated: '2026-08-31'
+method: searched
+source: live probe of https://www.jurisign.fr/.well-known/* and https://jurisign.fr/.well-known/*
+note: >-
+  Probed the closed named path list on both hosts. Apex jurisign.fr 301-redirects every path to the www host, so
+  www.jurisign.fr is the serving host. One real document is served: an RFC 9116 security.txt with Contact, Policy,
+  Expires, Canonical and Preferred-Languages, plus a French-language disclosure window. Everything else returns a
+  bare nginx 404 (564 bytes of text/html), which is a genuine absence and not a catch-all shell.
+path_echo_control: passed
+soft_404_control:
+  path: /.well-known/jurisign-negative-control-7f3ab91c.json
+  status: 404
+  bytes: 564
+  note: Negative control returns a real 404, so no path-echo / SPA catch-all false positive on this host.
+hit_count: 1
+hosts:
+- host: https://www.jurisign.fr
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: jurisign-security.txt
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+- host: https://jurisign.fr
+  documents:
+  - path: /.well-known/security.txt
+    status: 301
+    note: Redirects to https://www.jurisign.fr/.well-known/security.txt
+  - path: /.well-known/openid-configuration
+    status: 301
+  - path: /.well-known/oauth-authorization-server
+    status: 301
+  - path: /.well-known/oauth-protected-resource
+    status: 301
+  - path: /.well-known/api-catalog
+    status: 301
+  - path: /.well-known/ai-plugin.json
+    status: 301
+  - path: /.well-known/agent-card.json
+    status: 301
+  - path: /.well-known/agent.json
+    status: 301
+  - path: /.well-known/aauth-resource.json
+    status: 301
+  - path: /.well-known/ucp.json
+    status: 301
+  - path: /.well-known/acp.json
+    status: 301

@@ -1,0 +1,149 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the JuriSign API
+  version: 1.0.0
+extends: ../openapi/jurisign-api-openapi.yml
+x-generated: '2026-08-31'
+x-method: generated
+x-source: >-
+  Derived from JuriSign's own published documentation (developer page, integration guide, pricing page and GDPR
+  Article 28 annex) plus the repository artifacts. Every value below is traceable to a published statement; nothing
+  is asserted that JuriSign does not say. The original spec is never mutated.
+actions:
+- target: $.info
+  description: >-
+    Record the machine-readable facts JuriSign publishes outside the contract - the eIDAS level and its explicit
+    limit, the terms/privacy locations, and the pointers to our derived artifacts.
+  update:
+    termsOfService: https://www.jurisign.fr/cgu
+    x-privacy-policy: https://www.jurisign.fr/confidentialite
+    x-dpa: https://www.jurisign.fr/sous-traitance
+    x-eidas:
+      regulation: (EU) No 910/2014
+      level: SES
+      qualified_trust_service_provider: false
+      advanced_or_qualified_signatures: false
+      source: https://www.jurisign.fr/sous-traitance
+    x-data-residency:
+      region: EU
+      transfers_outside_eu: false
+      sub_processors:
+      - {name: IONOS SARL, role: hosting and transactional mail, location: EU}
+      - {name: OVHcloud, role: SMS routing, location: EU}
+      - {name: Brevo (Sendinblue SAS), role: mail failover, location: EU}
+      source: https://www.jurisign.fr/sous-traitance
+    x-operator:
+      legal_entity: PCFRANCE
+      siret: '392 232 054 00040'
+      country: FR
+    x-artifacts:
+      conventions: conventions/jurisign-conventions.yml
+      errors: errors/jurisign-problem-types.yml
+      rate_limits: rate-limits/jurisign-rate-limits.yml
+      scopes: scopes/jurisign-scopes.yml
+      sandbox: sandbox/jurisign-sandbox.yml
+      webhooks: asyncapi/jurisign-webhooks.yml
+      data_model: data-model/jurisign-data-model.yml
+- target: $.servers
+  description: >-
+    The spec ships a single server on the apex host. The apex 301-redirects to www, and every published example on
+    the developer page uses www, so record www as an equivalent host rather than replacing the provider's own value.
+  update:
+  - url: https://jurisign.fr/api/v1
+    description: Production (also serves sandbox requests - see POST /auth/sandbox-token)
+  - url: https://www.jurisign.fr/api/v1
+    description: >-
+      Canonical www host. The apex issues a 301 to this host for every path; the developer page and integration
+      guide use it in all curl examples.
+- target: $.components.securitySchemes.bearerAuth
+  description: Record the scope vocabulary the token carries, which the scheme itself does not express.
+  update:
+    x-token-scopes:
+    - documents:read
+    - documents:write
+    - sign-requests:read
+    - sign-requests:write
+    - webhooks:manage
+    x-scope-default: all five when `scopes` is omitted on POST /auth/token
+    x-scope-failure-status: 403
+    x-token-modes:
+    - {mode: live, prefix: none, issued_by: POST /auth/token}
+    - {mode: sandbox, prefix: sandbox_, issued_by: POST /auth/sandbox-token}
+    x-mixing-modes-status: 401
+- target: $.paths['/sign-requests'].post
+  description: >-
+    Mark the consequence profile of the one operation that carries an Idempotency-Key, and record that creation is
+    silent - the single most-reported integration mistake in JuriSign's own guide.
+  update:
+    x-agentic-access:
+      action_class: write
+      consequence: none-until-send
+      reversible: true
+      reversal_operation: none required - an unsent request is inert
+      idempotent: true
+      idempotency_header: Idempotency-Key
+      idempotency_retention: 24h
+      escalation: none
+    x-notification-side-effect: false
+    x-note: >-
+      Creates in `draft`. No email or SMS is sent and no credit is spent until sendSignRequest is called, or unless
+      auto_send is set on this call.
+- target: $.paths['/sign-requests/{id}/send'].post
+  description: Mark the consequential boundary of the API.
+  update:
+    x-agentic-access:
+      action_class: write
+      consequence: high
+      consequence_detail: >-
+        Spends a signature credit and delivers real email or SMS to named third parties. Billable and externally
+        visible.
+      reversible: true
+      reversal_operation: cancelSignRequest
+      reversal_window: while status is `pending` only
+      idempotent: false
+      escalation: recommend-human-approval
+- target: $.paths['/sign-requests/{id}/cancel'].post
+  description: Record the state window in which this reversal works.
+  update:
+    x-agentic-access:
+      action_class: write
+      consequence: medium
+      reversible: false
+      reversal_window_note: Only requests in `pending` status can be cancelled; a completed signature is final.
+- target: $.paths['/documents/{id}'].delete
+  update:
+    x-agentic-access:
+      action_class: delete
+      consequence: medium
+      reversible: false
+      precondition: status must be `draft`
+- target: $.paths['/bulk-campaigns/{id}/launch'].post
+  description: Bulk send is the highest-consequence operation in the API - it fans out to every recipient at once.
+  update:
+    x-agentic-access:
+      action_class: write
+      consequence: high
+      consequence_detail: Sends to every recipient in the campaign and spends one credit per recipient.
+      reversible: true
+      reversal_operation: cancelBulkCampaign
+      reversal_window: while the campaign is running
+      escalation: require-human-approval
+- target: $.paths['/webhooks'].post
+  update:
+    x-secret-shown-once: true
+    x-signature-algorithm: HMAC-SHA256
+    x-signature-header: X-Jurisign-Signature
+    x-retry-policy: 8 attempts over ~42 hours
+    x-note: >-
+      The developer page and the older integration guide disagree on the header name (X-Jurisign-Signature vs
+      X-Signature) and on the retry policy (8/~42h vs 3 attempts at 1/5/30 min). Both are published; recorded as a
+      conflict rather than silently resolved.
+- target: $.paths['/auth/sandbox-token'].post
+  update:
+    x-agentic-access:
+      action_class: read
+      consequence: none
+      reversible: true
+      reversal_operation: revokeToken
+    x-recommended-for-agents: true
+    x-note: The safe default for any unattended caller - identical responses, no messages sent, no credits spent.

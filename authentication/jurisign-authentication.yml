@@ -1,0 +1,14 @@
+generated: '2026-08-31'
+method: derived
+source: openapi/jurisign-api-openapi.yml
+summary:
+  types:
+  - http
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer
+    {token}'
+  sources:
+  - openapi/jurisign-api-openapi.yml

@@ -1,0 +1,76 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/developpeurs
+sources:
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/api/openapi.json
+available: true
+free: true
+credit_card_required: false
+signup_required: true
+note: >-
+  The sandbox is not a separate host. Production serves sandbox traffic, and the mode is carried entirely by the
+  token prefix. The provider is explicit that the prefix alone is the switch: "Demandez un jeton de test : il
+  porte le prefixe sandbox_, et c'est ce prefixe seul qui neutralise les envois reels. Le meme jeton sans son
+  prefixe est refuse - expres."
+obtain:
+  operationId: createSandboxToken
+  method: POST
+  path: /auth/sandbox-token
+  credentials: The same email/password used for POST /auth/token.
+  request_example: |
+    curl -X POST https://www.jurisign.fr/api/v1/auth/sandbox-token \
+      -H "Content-Type: application/json" \
+      -d '{"email":"vous@exemple.fr","password":"…"}'
+  response_shape: '{ "token": "sandbox_<id>|<secret>", "sandbox": true }'
+token_modes:
+- mode: live
+  prefix: none
+  issued_by: POST /auth/token
+- mode: sandbox
+  prefix: sandbox_
+  issued_by: POST /auth/sandbox-token
+mixing_rule:
+  description: >-
+    A sandbox token can only be used with its sandbox_ prefix, and a live token can never be used with it. Mixing
+    the two returns 401.
+  status: 401
+behaviour_in_sandbox:
+  emails_to_signers: not sent (routed to the log mailer)
+  sms_to_signers: not sent (logged)
+  signature_credits: not deducted
+  invoices: none
+  api_responses: identical to production
+  webhooks: delivered for real
+  webhook_rationale: >-
+    The provider deliberately keeps webhook delivery live in sandbox - "Les webhooks partent reellement : un
+    webhook qu'on ne recoit pas ne prouve rien."
+  response_marker: '"_sandbox": true'
+data_isolation:
+  description: >-
+    Documents and signature requests created in sandbox mode are isolated from the organization's real data. They
+    never appear in a normal (non-sandbox) request, and vice versa.
+  source: openapi/jurisign-api-openapi.yml#/paths/~1auth~1sandbox-token/post/description
+feature_parity: full
+feature_parity_note: >-
+  "toutes les fonctions sont ouvertes" - every capability is open in sandbox, including multi-signer, fillable
+  fields, templates, bulk send, public forms, pay-at-signature, webhooks, scoped tokens, and downloading the
+  signed document with its proof file.
+hosted_console:
+  available: true
+  description: >-
+    A sandbox key also unlocks a browser test console with 36 pre-built calls grouped by theme, runnable with one
+    click and nothing to install.
+  access: On invitation - the developer page issues the code immediately to a submitted work email address.
+  url: https://www.jurisign.fr/developpeurs/essai
+test_fixtures:
+  published_test_values: none
+  note: >-
+    No magic test identifiers, test cards or fixture accounts are published. The sandbox works against the
+    caller's own real account with real-looking data; neutralisation happens at the delivery and billing layer,
+    not through reserved test values. Nothing is invented here.
+live_demo:
+  description: >-
+    LocAdmin, a property-management product, exposes a public demo that calls the JuriSign sandbox end to end.
+  url: https://api-test.locadmin.fr/acces
+  third_party: true

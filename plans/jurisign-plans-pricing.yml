@@ -1,0 +1,150 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/tarifs
+sources:
+- https://www.jurisign.fr/tarifs
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/jetons
+currency: EUR
+tax_note: >-
+  Subscription and Pack 100 prices are displayed HT (excluding 20% French VAT). SMS OTP token packs and JuriSign
+  Flash are displayed TTC (VAT included). The site states this distinction explicitly in its pricing FAQ.
+billing_note: >-
+  Priced per organization, not per user. Monthly prices for START, Solo, Equipe and Professionnel are the annual
+  commitment rate; the developer-page estimator states annual commitment is 15% cheaper than monthly. No credit
+  card is required for the sandbox or the free trial.
+api_access_note: >-
+  API access is not tiered. The developer page states "Chaque capacite est accessible des le premier jeton - nous
+  ne bridons jamais un client API par son forfait" (every capability is available from the first token; an API
+  client is never limited by its plan). The plan governs signature volume and options, not endpoint access. The
+  comparison table does gate Webhooks off the free Decouverte tier and the Pack 100.
+plan_count: 8
+plans:
+- name: Decouverte
+  slug: decouverte
+  price: 0
+  currency: EUR
+  billing_period: trial
+  trial: '1 week, 4 signatures included, no credit card'
+  then_price: 4.90
+  then_billing_period: month
+  included_quota: 6 signatures/month after the trial week
+  users: 1
+  features: [Upload & PDF placement, visual signature, SHA-256 chained proof, Email OTP, multi-page signature, automatic reminders, 'REST API (47 endpoints)']
+  limits: {webhooks: false, sms_otp: 'option, 1.30 EUR TTC per signature'}
+- name: START
+  slug: start
+  price: 8.00
+  currency: EUR
+  billing_period: month
+  billing_terms: annual commitment
+  included_quota: 10 simple signatures/month
+  users: 1
+  overage: SMS OTP verification +0.12 EUR per SMS
+  features: [Upload & PDF placement, visual signature, SHA-256 chained proof, Email OTP, signer photo, automatic reminders, REST API & Webhooks]
+  limits: {options_after_3_free_months: '+1 EUR/option for multi-PDF merge, multi-page signature, per-page initials'}
+- name: Solo
+  slug: solo
+  price: 12.80
+  currency: EUR
+  billing_period: month
+  billing_terms: annual commitment
+  included_quota: 30 signatures/month
+  users: 1
+  overage: SMS OTP verification +0.12 EUR per SMS
+  effective_unit_price: 0.43 EUR per signature
+  features: [Upload & PDF placement, visual signature, SHA-256 chained proof, Email OTP, signer photo, multi-page signature, per-page initials, automatic reminders, REST API & Webhooks]
+- name: Equipe
+  slug: equipe
+  price: 19.80
+  currency: EUR
+  billing_period: month
+  billing_terms: annual commitment
+  included_quota: 50 signatures/month
+  users: 5
+  overage: SMS OTP verification +0.08 EUR per SMS
+  effective_unit_price: 0.40 EUR per signature
+  features: [Upload & PDF placement, visual signature, SHA-256 chained proof, Email OTP, signer photo, multi-page signature, per-page initials, automatic reminders, REST API & Webhooks]
+- name: Professionnel
+  slug: professionnel
+  price: 49.00
+  currency: EUR
+  billing_period: month
+  billing_terms: annual commitment
+  included_quota: 100 signatures/month
+  users: 5
+  overage: SMS OTP verification +0.08 EUR per SMS
+  effective_unit_price: 0.49 EUR per signature
+  popular: true
+  features: [Upload & PDF placement, visual signature, SHA-256 chained proof, Email OTP, signer photo, multi-page signature, per-page initials, automatic reminders, REST API & Webhooks]
+  note: >-
+    The plan card states 5 users; the detailed comparison table on the same page states 10 for the Pro column.
+    Recorded from the plan card and flagged rather than reconciled, because the provider publishes both.
+- name: Entreprise
+  slug: entreprise
+  price: null
+  price_model: quote
+  currency: EUR
+  billing_period: negotiated
+  included_quota: unlimited signatures
+  users: unlimited
+  features: [everything in Professionnel, SMS OTP included, multi-PDF merge, SSO, 10-year secure archiving, priority support (4h), guaranteed SLA, dedicated contact]
+- name: Pack 100
+  slug: pack-100
+  price: 133.00
+  currency: EUR
+  billing_period: one-time
+  included_quota: 100 signatures, 100 Email or SMS OTP included
+  validity: 1 year from first use
+  users: unlimited
+  effective_unit_price: 1.33 EUR per signature
+  limits: {webhooks: false, automatic_reminders: false, subscription: none}
+- name: JuriSign Flash
+  slug: flash
+  price: 3.50
+  price_basis: TTC
+  currency: EUR
+  billing_period: per-signature
+  included_quota: 1 signature, up to 6 signers
+  account_required: false
+  features: [SMS OTP included, selfie included]
+  url: https://www.jurisign.fr/flash
+api_overage:
+  source: https://www.jurisign.fr/developpeurs
+  note: Published on the developer-page cost estimator, applying to API usage beyond the plan's included signatures.
+  tiers:
+  - from: 1
+    price_per_signature: 1.10
+  - from: 100
+    price_per_signature: 0.95
+  - from: 500
+    price_per_signature: 0.80
+  - from: 2001
+    price_per_signature: null
+    note: Above 2,000 signatures/month the provider issues a quote.
+  annual_commitment_discount: 0.15
+sms_otp_token_packs:
+  source: https://www.jurisign.fr/jetons
+  basis: TTC
+  validity: 6 months
+  unit: 1 token = 1 signer on 1 document, consumed only on an effective signature
+  packs:
+  - quantity: 5
+    price: 13.00
+    unit_price: 2.60
+  - quantity: 10
+    price: 22.00
+    unit_price: 2.20
+  - quantity: 50
+    price: 95.00
+    unit_price: 1.90
+  - quantity: 500
+    price: 650.00
+    unit_price: 1.30
+availability_commitment:
+  uptime: 99.5%
+  period: month
+  source: https://www.jurisign.fr/tarifs
+  note: >-
+    Published as a general availability commitment on the pricing page. A contractual SLA is listed as an
+    Entreprise-tier feature only.

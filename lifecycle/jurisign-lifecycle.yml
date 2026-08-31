@@ -1,0 +1,78 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/developpeurs
+sources:
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/api/openapi.json
+- https://www.jurisign.fr/tarifs
+- https://www.jurisign.fr/cgv
+versioning:
+  style: uri-path
+  current_version: v1
+  path_prefix: /api/v1
+  spec_version: 3.0.3
+  spec_info_version: 3.24.1
+  product_version: 3.24.1
+  product_version_source: Site footer and pricing-page footer, both reading "v3.24.1" on 2026-08-31.
+  note: >-
+    The OpenAPI `info.version` tracks the product release number (3.24.1) rather than the API contract version,
+    which is carried in the URI path as v1. There is one path version and it has never been superseded.
+deprecation:
+  policy_published: false
+  deprecated_operations: []
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  note: >-
+    No deprecation or sunset policy is published on the developer page, the integration guide or in the CGU/CGV,
+    and the 46-operation spec carries no `deprecated: true` flag, no Sunset header and no Deprecation header
+    anywhere. Recorded as absent, which is what was found - not as a policy that exists but was not located.
+  backwards_compatibility_evidence:
+  - change: Multi-file upload via files[]
+    note: >-
+      The provider added files[] alongside the existing singular `file` field and states explicitly that the
+      singular field "ne change pas" / "continue de fonctionner a l'identique : rien a changer dans une
+      integration existante" - an additive change with the old shape preserved.
+    source: https://www.jurisign.fr/api/guide
+  - change: Token scopes
+    note: >-
+      Scopes were introduced with an all-5-scopes default so existing integrations keep working - "Omit to
+      receive all 5 scopes (default, unchanged behavior for existing integrations)."
+    source: openapi/jurisign-api-openapi.yml#/paths/~1auth~1token/post
+status_page:
+  published: false
+  probes:
+  - url: https://status.jurisign.fr
+    status: null
+    result: 'TLS certificate does not cover the host - no status subdomain exists.'
+  - url: https://www.jurisign.fr/status
+    status: 404
+  note: No status page or uptime dashboard is published. Availability is stated as a commitment on the pricing page instead.
+availability:
+  commitment: 99.5%
+  period: month
+  source: https://www.jurisign.fr/tarifs
+  statement: >-
+    "JuriSign privilegie la securite et la protection de ses clients, ce qui implique de nombreuses mises a jour
+    regulieres pouvant impacter momentanement la disponibilite du service. Nous nous engageons sur un taux de
+    disponibilite de 99,5% par mois."
+  contractual_sla: Entreprise tier only ("SLA garanti"), by quote.
+  support_response_target: 4 hours, Entreprise tier only.
+changelog:
+  published: false
+  probes:
+  - url: https://www.jurisign.fr/changelog
+    status: 404
+  - url: https://www.jurisign.fr/nouveautes
+    status: 404
+  note: >-
+    No dated changelog or release-notes page is published. Release numbering is visible in the site footer and in
+    the OpenAPI info.version, but there is no per-release record to structure, so no changelog artifact was
+    written rather than an empty one.
+data_lifecycle:
+  export_window_after_account_closure: 30 days
+  deletion: Data is deleted after that window, except billing records kept 10 years by legal obligation.
+  extended_archiving: 10 years, Entreprise commercial option; surfaced as the read-only `extended_retention` flag on SignRequest.
+  restitution: 'On written request before the window expires, in a structured, commonly used format.'
+  source: https://www.jurisign.fr/sous-traitance
+  updated: '2026-08-31'

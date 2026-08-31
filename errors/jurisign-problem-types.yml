@@ -1,0 +1,77 @@
+generated: '2026-08-31'
+method: derived
+source: openapi/jurisign-api-openapi.yml
+enriched_from:
+- https://www.jurisign.fr/developpeurs
+- https://www.jurisign.fr/api/guide
+format: laravel-validation
+rfc9457: false
+content_type: application/json
+envelope:
+  message: Human-readable message. Always present.
+  errors: 'Present on 422 only. An object keyed by dot-notation field path, each value an array of messages.'
+  example: |
+    {
+      "message": "The given data was invalid.",
+      "errors": { "signers.0.email": ["Adresse e-mail invalide."] }
+    }
+note: >-
+  JuriSign returns Laravel's native error envelope, not RFC 9457 problem+json. There is no `type` URI, no `title`,
+  and no application/problem+json media type anywhere in the 46-operation spec, so there are no problem TYPES to
+  catalogue - only status classes. This catalogue records the status classes the spec actually declares, with the
+  meaning the provider publishes for each. No error identifiers were invented.
+status_classes:
+- status: 400
+  declared_in_spec: false
+  note: Not used by this API.
+- status: 401
+  title: Unauthenticated
+  meaning: Token missing, invalid, revoked, or a sandbox/live token used against the wrong mode.
+  remediation: Obtain a new token via POST /auth/token (or POST /auth/sandbox-token) and retry.
+  declared_on_operations: 43
+- status: 403
+  title: Forbidden
+  meaning: >-
+    Insufficient token scope, a resource belonging to another organization, an account not attached to an
+    organization, or a suspended organization.
+  remediation: Request a token carrying the required scope, or check the resource belongs to your organization.
+  declared_on_operations: 6
+- status: 404
+  title: Not Found
+  meaning: The resource does not exist, or is not visible to this token's organization / sandbox mode.
+  remediation: Verify the UUID and that it was created under the same token mode.
+  declared_on_operations: 26
+- status: 409
+  title: Idempotency-Key conflict
+  meaning: >-
+    The Idempotency-Key was already used with a different request body. The provider calls this an integration
+    bug, not a retry condition.
+  remediation: Use a new key, or replay the original body unchanged.
+  declared_on_operations: 1
+  operations: [createSignRequest]
+- status: 422
+  title: Validation error
+  meaning: >-
+    Missing or invalid fields, or a state precondition that fails - deleting a non-draft document, deleting a
+    bulk campaign while it is processing, cancelling a request that is not pending, or requesting a payment
+    without an active Stripe Connect account.
+  remediation: Read the per-field messages under `errors`; fix the field or the resource state and retry.
+  declared_on_operations: 17
+- status: 429
+  title: Rate limit exceeded
+  meaning: A per-minute bucket was exhausted. See rate-limits/jurisign-rate-limits.yml for the six buckets.
+  remediation: Wait for the number of seconds in the Retry-After header rather than retrying immediately.
+  headers: [Retry-After]
+  declared_on_operations: 2
+- status: 500
+  title: Internal server error
+  meaning: Server-side failure.
+  remediation: Retry with backoff; contact support@jurisign.fr if it persists.
+  declared_in_spec: false
+  documented_in: https://www.jurisign.fr/api/guide
+validation_field_paths:
+  style: dot-notation
+  examples:
+  - signers.0.email
+  - document_id
+  note: Array members are addressed by index, so a client can map a message back to the exact signer that failed.

@@ -1,0 +1,138 @@
+generated: '2026-08-31'
+method: searched
+source: https://www.jurisign.fr/api/guide
+sources:
+- https://www.jurisign.fr/api/guide
+- https://www.jurisign.fr/developpeurs
+- openapi/jurisign-api-openapi.yml
+note: >-
+  JuriSign publishes worked, copy-pasteable examples in two places: 46 inline `example` values inside the OpenAPI
+  (on request fields and response properties) and complete curl request/response pairs on the developer page and in
+  the integration guide. The guide also states it carries PHP, JavaScript and Python variants. This index records
+  what is published and where; the examples themselves are quoted verbatim from the provider's own pages and no
+  values were invented.
+in_spec:
+  inline_example_count: 46
+  style: per-field `example` values on request bodies and response schemas
+  full_request_response_examples: false
+  note: The spec carries field-level examples but no operation-level `examples` blocks and no named example objects.
+languages_published: [curl, php, javascript, python]
+languages_source: 'https://www.jurisign.fr/developpeurs - "Le parcours complet pas a pas, avec exemples PHP, JavaScript et Python."'
+examples:
+- name: Obtain a sandbox token
+  operationId: createSandboxToken
+  source: https://www.jurisign.fr/developpeurs
+  request: |
+    curl -X POST https://www.jurisign.fr/api/v1/auth/sandbox-token \
+      -H "Content-Type: application/json" \
+      -d '{"email":"vous@exemple.fr","password":"…"}'
+  response: |
+    { "token": "sandbox_12|abc…", "sandbox": true }
+- name: Obtain a live token
+  operationId: createToken
+  source: https://www.jurisign.fr/api/guide
+  request: |
+    curl -X POST https://jurisign.fr/api/v1/auth/token \
+      -H "Content-Type: application/json" \
+      -d '{"email":"votre@email.com","password":"…","device_name":"mon-backoffice"}'
+  response_shape: '{ "token": "...", "token_type": "Bearer", "user": { "id": "...", "name": "...", "email": "...", "organization": { "id": "...", "name": "..." } } }'
+- name: Upload a single PDF
+  operationId: uploadDocument
+  source: https://www.jurisign.fr/developpeurs
+  request: |
+    curl -X POST https://www.jurisign.fr/api/v1/documents \
+      -H "Authorization: Bearer $TOKEN" \
+      -F "file=@contrat.pdf" \
+      -F "title=Contrat de prestation"
+  response: |
+    { "data": { "id": "9f1c…", "page_count": 3 } }
+- name: Upload and merge several files
+  operationId: uploadDocument
+  source: https://www.jurisign.fr/developpeurs
+  request: |
+    curl -X POST https://www.jurisign.fr/api/v1/documents \
+      -H "Authorization: Bearer $TOKEN" \
+      -F "files[]=@contrat.pdf" \
+      -F "files[]=@annexe1.pdf" \
+      -F "files[]=@annexe2.pdf"
+  response: |
+    { "data": { "id": "3b7a…", "page_count": 11, "merged_from": 3 } }
+  note: merged_from confirms how many files were actually merged, in send order.
+- name: Create and auto-send a signature request
+  operationId: createSignRequest
+  source: https://www.jurisign.fr/developpeurs
+  request: |
+    curl -X POST https://www.jurisign.fr/api/v1/sign-requests \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "document_id": "9f1c…",
+        "subject": "Merci de signer votre contrat",
+        "signing_order_type": 0,
+        "expiry_hours": 72,
+        "auto_send": true,
+        "redirect_url": "https://app.votre-site.fr/merci",
+        "signers": [
+          { "prenom": "Jean", "nom": "Dupont",
+            "email": "jean@exemple.fr", "otp_channel": "email" }
+        ]
+      }'
+  outcome: The signer receives their email and the caller receives the sign_request.sent webhook.
+- name: Create a request with signature zones and mixed OTP channels
+  operationId: createSignRequest
+  source: https://www.jurisign.fr/api/guide
+  request_body: |
+    {
+      "document_id": "doc-uuid-...",
+      "subject": "Signature du contrat de bail",
+      "signing_order_type": 0,
+      "expiry_hours": 168,
+      "signers": [
+        { "prenom": "Jean", "nom": "Dupont", "email": "jean.dupont@email.com",
+          "otp_channel": "sms", "telephone": "+33612345678" },
+        { "prenom": "Marie", "nom": "Martin", "email": "marie.martin@email.com",
+          "otp_channel": "email" }
+      ],
+      "zones": [
+        { "signer_index": 0, "page": 5, "x": 10, "y": 75, "width": 35, "height": 10 },
+        { "signer_index": 1, "page": 5, "x": 55, "y": 75, "width": 35, "height": 10 }
+      ]
+    }
+  note: 'Zone coordinates are percentages of the page (0-100), origin top-left. signer_index binds a zone to a signer by position.'
+- name: Send a draft request to its signers
+  operationId: sendSignRequest
+  source: https://www.jurisign.fr/api/guide
+  request: |
+    curl -X POST https://jurisign.fr/api/v1/sign-requests/sr-uuid-.../send \
+      -H "Authorization: Bearer $TOKEN"
+  response_shape: '{ "message": "Demande envoyée aux signataires.", "data": { "id": "...", "status": "pending", "sent_at": "..." } }'
+- name: Register a webhook endpoint
+  operationId: createWebhook
+  source: https://www.jurisign.fr/api/guide
+  request: |
+    curl -X POST https://jurisign.fr/api/v1/webhooks \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://votre-serveur.com/webhooks/jurisign",
+        "events": ["sign_request.completed", "signer.signed"]
+      }'
+  response_note: The 201 carries the signing secret. It is shown once and never again.
+- name: Paginate a collection
+  operationId: listSignRequests
+  source: https://www.jurisign.fr/developpeurs
+  request: GET /api/v1/sign-requests?per_page=50&page=2
+  response: |
+    { "data": [ … ],
+      "meta": { "current_page": 2, "last_page": 7, "per_page": 50, "total": 312 } }
+- name: A 422 validation error
+  source: https://www.jurisign.fr/developpeurs
+  response: |
+    {
+      "message": "The given data was invalid.",
+      "errors": { "signers.0.email": ["Adresse e-mail invalide."] }
+    }
+hosted_console:
+  available: true
+  description: A browser console with 36 pre-built runnable calls, unlocked by a sandbox key.
+  url: https://www.jurisign.fr/developpeurs/essai
