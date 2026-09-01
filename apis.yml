@@ -16,6 +16,20 @@ created: '2026-08-31'
 modified: '2026-08-31'
 specificationVersion: '0.21'
 tags:
+  - Electronic Signature
+  - E-Signature
+  - eIDAS
+  - Document Signing
+  - PDF
+  - Webhook
+  - OTP
+  - GDPR
+  - France
+  - Legal Tech
+  - Identity Verification
+  - Audit Trail
+  - data-residency-eu
+tags_raw:
   - electronic-signature
   - esignature
   - eidas
@@ -40,6 +54,17 @@ apis:
     humanURL: https://www.jurisign.fr/developpeurs
     baseURL: https://www.jurisign.fr/api/v1
     tags:
+      - Electronic Signature
+      - E-Signature
+      - eIDAS
+      - Document Signing
+      - PDF
+      - Webhook
+      - OTP
+      - GDPR
+      - France
+      - Legal Tech
+    tags_raw:
       - electronic-signature
       - esignature
       - eidas
