@@ -1,7 +1,7 @@
 name: JuriSign
 aid: jurisign
 description: >-
-  eIDAS-compliant electronic signature API built, operated and hosted in France by PCFRANCE. The 46-operation
+  eIDAS electronic signature API developed in France by PCFrance and hosted in Europe. JuriSign issues Simple Electronic Signatures (SES) under eIDAS Regulation (EU) No 910/2014 only -- not advanced (AdES) and not qualified (QES). The 46-operation
   REST contract covers PDF upload with multi-file merge, multi-signer signature requests with email or SMS OTP
   verification, pixel-placed signature zones, reusable templates, bulk campaigns, shareable public self-signing
   forms, pay-at-signature collection through Stripe Connect, HMAC-signed webhooks across twelve events, and
@@ -10,6 +10,23 @@ description: >-
   it is not a qualified trust service provider and issues neither advanced nor qualified signatures. Bearer
   tokens carry one of five restrictable scopes, an Idempotency-Key makes the billable write safely repeatable,
   and a free sandbox needs no credit card. All data stays in the European Union.
+accessModel:
+  pricing: freemium
+  onboarding: open
+  trial: false
+  try_now: true
+  public: true
+  label: Freemium · Open access
+  confidence: high
+  source:
+  - plans
+  - authentication
+  - scopes
+  - rate-limits
+  - security
+  - sandbox
+  generated: '2026-09-02'
+  method: derived
 image: https://www.jurisign.fr/images/icons/icon-192x192.png
 url: https://raw.githubusercontent.com/api-evangelist/jurisign/refs/heads/main/apis.yml
 created: '2026-08-31'
@@ -44,7 +61,7 @@ tags_raw:
   - audit-trail
   - data-residency-eu
 apis:
-  - name: JuriSign REST API
+  - name: JuriSign API
     description: >-
       Documented, versioned REST API (OpenAPI 3.0.3, 46 operations across 8 tags) for eIDAS SES electronic
       signatures: documents, sign requests, templates, bulk campaigns, public forms, account credits, webhooks

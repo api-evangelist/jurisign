@@ -1,6 +1,6 @@
 # JuriSign
 
-> eIDAS-compliant electronic signature REST API, built and hosted in France by PCFRANCE. 46 documented operations
+> eIDAS electronic signature REST API, developed in France by PCFrance and hosted in Europe. 46 documented operations
 > cover document upload, multi-signer signature requests with email or SMS OTP verification, reusable templates,
 > bulk campaigns, public self-signing forms, pay-at-signature, signed webhooks, and audit-proof download. Signature
 > level is Simple Electronic Signature (SES) under eIDAS Regulation (EU) 910/2014 — the provider states plainly it
