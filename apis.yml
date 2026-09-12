@@ -116,6 +116,8 @@ maintainers:
     email: support@jurisign.fr
     url: https://www.jurisign.fr
 common:
+- type: Website
+  url: https://www.jurisign.fr/
 - type: DeveloperPortal
   url: https://www.jurisign.fr/developpeurs
 - type: Documentation
