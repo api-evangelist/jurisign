@@ -61,56 +61,182 @@ tags_raw:
   - audit-trail
   - data-residency-eu
 apis:
-  - name: JuriSign API
-    description: >-
-      Documented, versioned REST API (OpenAPI 3.0.3, 46 operations across 8 tags) for eIDAS SES electronic
-      signatures: documents, sign requests, templates, bulk campaigns, public forms, account credits, webhooks
-      and authentication. Bearer token auth with five restrictable scopes, an Idempotency-Key on sign-request
-      creation, page-number pagination, and a free sandbox token flow that neutralises real delivery and billing
-      while still firing webhooks.
-    humanURL: https://www.jurisign.fr/developpeurs
-    baseURL: https://www.jurisign.fr/api/v1
-    tags:
-      - Electronic Signature
-      - E-Signature
-      - eIDAS
-      - Document Signing
-      - PDF
-      - Webhook
-      - OTP
-      - GDPR
-      - France
-      - Legal Tech
-    tags_raw:
-      - electronic-signature
-      - esignature
-      - eidas
-      - document-signing
-      - pdf
-      - webhooks
-      - otp
-      - gdpr
-      - france
-      - legaltech
-    properties:
-      - type: OpenAPI
-        url: openapi/jurisign-api-openapi.yml
-      - type: OpenAPI
-        url: https://www.jurisign.fr/api/openapi.json
-      - type: DeveloperPortal
-        url: https://www.jurisign.fr/developpeurs
-      - type: Documentation
-        url: https://www.jurisign.fr/api/docs
-      - type: APIReference
-        url: https://www.jurisign.fr/api/swagger
-      - type: GettingStarted
-        url: https://www.jurisign.fr/api/guide
-      - type: Overlay
-        url: overlays/jurisign-api-overlay.yaml
-      - type: Examples
-        url: examples/jurisign-examples.yml
-      - type: DataModel
-        url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-account-api
+  name: JuriSign Account API
+  description: Credit balance and plan
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Account
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-account-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-authentication-api
+  name: JuriSign Authentication API
+  description: Obtain and revoke API tokens
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Authentication
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-authentication-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-bulk-api
+  name: JuriSign Bulk API
+  description: Merge templates and bulk campaigns (one individualised request per recipient)
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Bulk
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-bulk-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-documents-api
+  name: JuriSign Documents API
+  description: Upload and manage PDF documents
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Documents
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-documents-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-public-forms-api
+  name: JuriSign Public Forms API
+  description: 'Shareable links: each respondent signs their own generated request, no account needed'
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Public Forms
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-public-forms-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-sign-requests-api
+  name: JuriSign Sign Requests API
+  description: Create, send, and track signature requests
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Sign Requests
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-sign-requests-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-templates-api
+  name: JuriSign Templates API
+  description: Reusable sign request templates
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Templates
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-templates-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
+- aid: jurisign:jurisign-webhooks-api
+  name: JuriSign Webhooks API
+  description: Manage webhook endpoints for event notifications
+  humanURL: https://www.jurisign.fr/developpeurs
+  baseURL: https://www.jurisign.fr/api/v1
+  tags:
+  - Webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/jurisign-webhooks-api-openapi.yml
+  - type: DeveloperPortal
+    url: https://www.jurisign.fr/developpeurs
+  - type: Documentation
+    url: https://www.jurisign.fr/api/docs
+  - type: APIReference
+    url: https://www.jurisign.fr/api/swagger
+  - type: GettingStarted
+    url: https://www.jurisign.fr/api/guide
+  - type: Examples
+    url: examples/jurisign-examples.yml
+  - type: DataModel
+    url: data-model/jurisign-data-model.yml
 maintainers:
   - FN: JuriSign (PCFRANCE)
     email: support@jurisign.fr
