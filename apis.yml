@@ -221,6 +221,8 @@ apis:
   humanURL: https://www.jurisign.fr/developpeurs
   baseURL: https://www.jurisign.fr/api/v1
   tags:
+  - Webhook
+  tags_raw:
   - Webhooks
   properties:
   - type: OpenAPI
