@@ -1,0 +1,481 @@
+openapi: 3.2.0
+info:
+  title: JuriSign Templates API
+  description: Electronic signature API (eIDAS SES level) with OTP verification (email or SMS).
+  version: 3.24.1
+  contact:
+    name: JuriSign Support
+    email: support@jurisign.fr
+    url: https://jurisign.fr
+  license:
+    name: Proprietary
+servers:
+- url: https://jurisign.fr/api/v1
+  description: Production (also serves sandbox requests — see POST /auth/sandbox-token)
+security:
+- bearerAuth: []
+tags:
+- name: Templates
+  description: Reusable sign request templates
+paths:
+  /templates:
+    get:
+      summary: List Sign Request Templates
+      description: Retrieve reusable sign request templates for your organization.
+      operationId: listTemplates
+      tags:
+      - Templates
+      parameters:
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          default: 20
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Templates list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /templates/{id}:
+    get:
+      summary: Get Template
+      description: Retrieve full details of a template, including signers and signature zones.
+      operationId: getTemplate
+      tags:
+      - Templates
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Template details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TemplateDetailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete Template
+      description: Delete a template and its own copy of the PDF, if any.
+      operationId: deleteTemplate
+      tags:
+      - Templates
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Template deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /templates/{id}/sign-requests:
+    post:
+      summary: Create Sign Request From Template
+      description: Create a signature request from a template, reusing its signers, signature zones, and (if present) its own copy of the document. Subject, message, expiry and redirect_url can be overridden. If the template has no document of its own, `document_id` is required.
+      operationId: createSignRequestFromTemplate
+      tags:
+      - Templates
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  maxLength: 255
+                message:
+                  type:
+                  - string
+                  - 'null'
+                  maxLength: 2000
+                metadata:
+                  type:
+                  - object
+                  - 'null'
+                expiry_hours:
+                  type: integer
+                  minimum: 1
+                  maximum: 720
+                auto_send:
+                  type: boolean
+                redirect_url:
+                  type: string
+                  format: uri
+                  maxLength: 2048
+                document_id:
+                  type: string
+                  format: uuid
+                  description: Required only if the template has no document of its own
+      responses:
+        '201':
+          description: Sign request created from template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SignRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+components:
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+    TemplateDetailed:
+      allOf:
+      - $ref: '#/components/schemas/Template'
+      - type: object
+        properties:
+          message:
+            type:
+            - string
+            - 'null'
+          signers:
+            type: array
+            items:
+              type: object
+              properties:
+                prenom:
+                  type: string
+                nom:
+                  type: string
+                email:
+                  type: string
+                telephone:
+                  type:
+                  - string
+                  - 'null'
+                otp_channel:
+                  type: string
+                  enum:
+                  - sms
+                  - email
+          zones:
+            type: array
+            items:
+              $ref: '#/components/schemas/SignatureZone'
+          document:
+            type:
+            - object
+            - 'null'
+            properties:
+              title:
+                type: string
+              original_filename:
+                type: string
+              page_count:
+                type: integer
+    SignRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject:
+          type: string
+          example: Please sign the NDA
+        message:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - draft
+          - pending
+          - completed
+          - cancelled
+          - expired
+        signing_order_type:
+          type: string
+          enum:
+          - parallel
+          - sequential
+        extended_retention:
+          type: boolean
+          description: True if your organization's commercial contract includes the extended archiving option (10 years). Informational only — reflects the billed option, not a distinct technical purge policy.
+        progress:
+          type: object
+          properties:
+            signed:
+              type: integer
+            total:
+              type: integer
+        redirect_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+          example: https://app.your-company.com/signed
+          description: URL shown to the signer as an explicit "return to <domain>" button on the success page. Must use https and match the domain declared for your organization (contact support to register it).
+        payment:
+          type:
+          - object
+          - 'null'
+          description: Present only when a payment was requested on this sign request (see the `payment` field on creation). The signer is invited to pay only after signing ("sign then pay") — `checkout_url` is null until the sign request is fully signed.
+          properties:
+            status:
+              type: string
+              enum:
+              - pending
+              - processing
+              - paid
+              - failed
+              - canceled
+              - expired
+            amount_cents:
+              type: integer
+              example: 5000
+            currency:
+              type: string
+              example: eur
+            description:
+              type:
+              - string
+              - 'null'
+            checkout_url:
+              type:
+              - string
+              - 'null'
+              format: uri
+              description: Stripe Checkout link, only present while status is processing (i.e. the sign request has been fully signed and the signer has not yet paid).
+            paid_at:
+              type:
+              - string
+              - 'null'
+              format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        completed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        document:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            page_count:
+              type: integer
+        created_by:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        signers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              email:
+                type: string
+                format: email
+              status:
+                type: string
+                enum:
+                - pending
+                - notified
+                - signed
+                - declined
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    Template:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type:
+          - string
+          - 'null'
+        subject:
+          type: string
+        signing_order_type:
+          type: string
+          enum:
+          - parallel
+          - sequential
+        expiry_hours:
+          type: integer
+        require_selfie:
+          type: boolean
+        requires_paraph:
+          type: boolean
+        signer_count:
+          type: integer
+        has_document:
+          type: boolean
+        usage_count:
+          type: integer
+        last_used_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+    SignatureZone:
+      type: object
+      properties:
+        page:
+          type: integer
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        type:
+          type: string
+          enum:
+          - signature
+          - text
+          - date
+          - checkbox
+          default: signature
+        label:
+          type:
+          - string
+          - 'null'
+          description: Instruction shown to the signer for text/checkbox fields
+        required:
+          type: boolean
+          default: true
+          description: Whether a text/checkbox field must be filled before the signer can sign
+        value:
+          type:
+          - string
+          - 'null'
+          description: Value entered by the signer (text/checkbox) or auto-filled date. Populated only once the sign request is signed.
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Resource UUID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found.
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer {token}'

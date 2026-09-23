@@ -1,0 +1,75 @@
+openapi: 3.2.0
+info:
+  title: JuriSign Account API
+  description: Electronic signature API (eIDAS SES level) with OTP verification (email or SMS).
+  version: 3.24.1
+  contact:
+    name: JuriSign Support
+    email: support@jurisign.fr
+    url: https://jurisign.fr
+  license:
+    name: Proprietary
+servers:
+- url: https://jurisign.fr/api/v1
+  description: Production (also serves sandbox requests — see POST /auth/sandbox-token)
+security:
+- bearerAuth: []
+tags:
+- name: Account
+  description: Credit balance and plan
+paths:
+  /account/credits:
+    get:
+      summary: Get Credit Balance
+      description: Retrieve your organization's real-time signature credit consumption. Scoped strictly to the organization of the authenticated token.
+      operationId: getAccountCredits
+      tags:
+      - Account
+      responses:
+        '200':
+          description: Credit balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      plan:
+                        type: string
+                        example: equipe
+                      credits_total:
+                        type: integer
+                        example: 100
+                      credits_used:
+                        type: integer
+                        example: 41
+                      credits_remaining:
+                        type: integer
+                        example: 59
+                        description: Never negative, even if usage exceeds the plan.
+                      trial_ends_at:
+                        type:
+                        - string
+                        - 'null'
+                        format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+components:
+  responses:
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer {token}'

@@ -1,0 +1,291 @@
+openapi: 3.2.0
+info:
+  title: JuriSign Documents API
+  description: Electronic signature API (eIDAS SES level) with OTP verification (email or SMS).
+  version: 3.24.1
+  contact:
+    name: JuriSign Support
+    email: support@jurisign.fr
+    url: https://jurisign.fr
+  license:
+    name: Proprietary
+servers:
+- url: https://jurisign.fr/api/v1
+  description: Production (also serves sandbox requests — see POST /auth/sandbox-token)
+security:
+- bearerAuth: []
+tags:
+- name: Documents
+  description: Upload and manage PDF documents
+paths:
+  /documents:
+    get:
+      summary: List Documents
+      description: Retrieve a paginated list of documents belonging to your organization.
+      operationId: listDocuments
+      tags:
+      - Documents
+      parameters:
+      - name: status
+        in: query
+        description: Filter by document status
+        schema:
+          type: string
+          enum:
+          - draft
+          - pending
+          - completed
+          - cancelled
+      - name: search
+        in: query
+        description: Search by document title
+        schema:
+          type: string
+      - name: per_page
+        in: query
+        description: 'Results per page (default: 20, max: 100)'
+        schema:
+          type: integer
+          default: 20
+      - name: page
+        in: query
+        description: Page number
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      summary: Upload Document
+      description: Upload a PDF document. Maximum file size is 20 MB.
+      operationId: uploadDocument
+      tags:
+      - Documents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to upload (max 20 MB)
+                title:
+                  type: string
+                  maxLength: 255
+                  description: Document title (defaults to filename if omitted)
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /documents/{id}:
+    get:
+      summary: Get Document
+      description: Retrieve details of a specific document.
+      operationId: getDocument
+      tags:
+      - Documents
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete Document
+      description: Delete a document. Only documents in `draft` status can be deleted.
+      operationId: deleteDocument
+      tags:
+      - Documents
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Document deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/Error'
+  /documents/{id}/download:
+    get:
+      summary: Download Document
+      description: Download the original PDF file.
+      operationId: downloadDocument
+      tags:
+      - Documents
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: PDF file download
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: Contract 2026
+        original_filename:
+          type: string
+          example: contract.pdf
+        status:
+          type: string
+          enum:
+          - draft
+          - pending
+          - completed
+          - cancelled
+        page_count:
+          type: integer
+          example: 3
+        file_size:
+          type: integer
+          example: 245760
+          description: Size in bytes
+        file_hash:
+          type: string
+          description: SHA-256 hash of the original file
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Resource UUID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found.
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer {token}'

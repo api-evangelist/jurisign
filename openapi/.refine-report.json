@@ -1,0 +1,34 @@
+{
+  "provider": "jurisign",
+  "sources": [
+    "_original/jurisign-openapi.json"
+  ],
+  "outputs": [
+    "jurisign-account-api-openapi.yml",
+    "jurisign-authentication-api-openapi.yml",
+    "jurisign-bulk-api-openapi.yml",
+    "jurisign-documents-api-openapi.yml",
+    "jurisign-public-forms-api-openapi.yml",
+    "jurisign-sign-requests-api-openapi.yml",
+    "jurisign-templates-api-openapi.yml",
+    "jurisign-webhooks-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "jurisign-openapi.json: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "jurisign-account-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-authentication-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-bulk-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-documents-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-public-forms-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-sign-requests-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-templates-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "jurisign-webhooks-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}

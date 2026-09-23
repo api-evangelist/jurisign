@@ -1,0 +1,268 @@
+openapi: 3.2.0
+info:
+  title: JuriSign Authentication API
+  description: Electronic signature API (eIDAS SES level) with OTP verification (email or SMS).
+  version: 3.24.1
+  contact:
+    name: JuriSign Support
+    email: support@jurisign.fr
+    url: https://jurisign.fr
+  license:
+    name: Proprietary
+servers:
+- url: https://jurisign.fr/api/v1
+  description: Production (also serves sandbox requests — see POST /auth/sandbox-token)
+security:
+- bearerAuth: []
+tags:
+- name: Authentication
+  description: Obtain and revoke API tokens
+paths:
+  /:
+    get:
+      summary: API Status
+      description: Returns the current API status and version information.
+      operationId: getStatus
+      security: []
+      tags:
+      - Authentication
+      responses:
+        '200':
+          description: API is operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: JuriSign API
+                  version:
+                    type: string
+                    example: '3.2'
+                  status:
+                    type: string
+                    example: ok
+                  docs:
+                    type: string
+                    example: https://jurisign.fr/api/docs
+  /auth/token:
+    post:
+      summary: Create API Token
+      description: Authenticate with email/password to obtain a Bearer token, scoped to your organization. By default the token is granted all 5 available scopes (documents:read, documents:write, sign-requests:read, sign-requests:write, webhooks:manage). Pass `scopes` to request a restricted subset instead — every endpoint checks the token's abilities and returns 403 if the required scope is missing. Rate limited to 10 attempts per minute for the targeted account, and 60 per minute for the calling IP.
+      operationId: createToken
+      security: []
+      tags:
+      - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                  description: Your account email address
+                password:
+                  type: string
+                  format: password
+                  example: your-password
+                  description: Your account password
+                device_name:
+                  type: string
+                  maxLength: 100
+                  example: my-app
+                  description: Optional device identifier. Tokens with the same device name will be revoked and replaced.
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                    - documents:read
+                    - documents:write
+                    - sign-requests:read
+                    - sign-requests:write
+                    - webhooks:manage
+                  example:
+                  - documents:read
+                  - sign-requests:write
+                  description: Optional. Restricts the token to the given scopes. `sign-requests:read` / `sign-requests:write` also cover the templates and bulk-* endpoints. Omit to receive all 5 scopes (default, unchanged behavior for existing integrations).
+      responses:
+        '200':
+          description: Token created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 1|abc123...
+                  token_type:
+                    type: string
+                    example: Bearer
+                  user:
+                    $ref: '#/components/schemas/AuthUser'
+        '403':
+          description: Account not in an organization or organization suspended
+          $ref: '#/components/responses/Error'
+        '422':
+          description: Invalid credentials or validation error
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          description: Rate limit exceeded (10 attempts/minute for the targeted account, 60/minute for the calling IP) — see the Retry-After header
+          $ref: '#/components/responses/Error'
+    delete:
+      summary: Revoke Current Token
+      description: Revoke the Bearer token used in this request.
+      operationId: revokeToken
+      tags:
+      - Authentication
+      responses:
+        '200':
+          description: Token revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /auth/sandbox-token:
+    post:
+      summary: Create Sandbox API Token
+      description: 'Authenticate with the same email/password as POST /auth/token, but obtain a sandbox token instead (prefixed sandbox_...). Requests made with this token never send real SMS or emails (SMS are logged, emails go through the log mailer) and never deduct signature credits. Documents and signature requests created in sandbox mode are isolated from your organization''s real data: they never appear in a normal (non-sandbox) request, and vice versa. A sandbox token can only be used with the sandbox_ prefix, and a normal token can never be used with it — mixing the two returns 401. Rate limited to 10 attempts per minute for the targeted account, and 60 per minute for the calling IP.'
+      operationId: createSandboxToken
+      security: []
+      tags:
+      - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                  description: Your account email address
+                password:
+                  type: string
+                  format: password
+                  example: your-password
+                  description: Your account password
+                device_name:
+                  type: string
+                  maxLength: 100
+                  example: my-app-sandbox
+                  description: Optional device identifier. Tokens with the same device name will be revoked and replaced.
+      responses:
+        '200':
+          description: Sandbox token created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: sandbox_1|abc123...
+                  token_type:
+                    type: string
+                    example: Bearer
+                  sandbox:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/AuthUser'
+        '403':
+          description: Account not in an organization or organization suspended
+          $ref: '#/components/responses/Error'
+        '422':
+          description: Invalid credentials or validation error
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          description: Rate limit exceeded (10 attempts/minute for the targeted account, 60/minute for the calling IP) — see the Retry-After header
+          $ref: '#/components/responses/Error'
+components:
+  schemas:
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Jean Dupont
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          example: admin
+        organization:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              example: My Company
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer {token}'
