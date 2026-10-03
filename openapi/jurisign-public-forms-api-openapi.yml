@@ -205,26 +205,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  parameters:
-    ResourceId:
-      name: id
-      in: path
-      required: true
-      description: Resource UUID
-      schema:
-        type: string
-        format: uuid
   responses:
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Not found.
     ValidationError:
       description: Validation error
       content:
@@ -251,7 +232,33 @@ components:
               message:
                 type: string
                 example: Unauthenticated.
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found.
   schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
     PublicForm:
       type: object
       properties:
@@ -298,22 +305,15 @@ components:
         created_at:
           type: string
           format: date-time
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-    Pagination:
-      type: object
-      properties:
-        current_page:
-          type: integer
-        last_page:
-          type: integer
-        per_page:
-          type: integer
-        total:
-          type: integer
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Resource UUID
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

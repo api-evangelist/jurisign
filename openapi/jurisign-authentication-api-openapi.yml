@@ -196,25 +196,6 @@ paths:
           $ref: '#/components/responses/Error'
 components:
   responses:
-    Error:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-    Unauthenticated:
-      description: Missing or invalid Bearer token
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Unauthenticated.
     ValidationError:
       description: Validation error
       content:
@@ -231,7 +212,31 @@ components:
                   type: array
                   items:
                     type: string
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
   schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
     AuthUser:
       type: object
       properties:
@@ -256,11 +261,6 @@ components:
             name:
               type: string
               example: My Company
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
   securitySchemes:
     bearerAuth:
       type: http

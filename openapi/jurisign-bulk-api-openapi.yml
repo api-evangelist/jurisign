@@ -456,6 +456,32 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
     Error:
       description: Error response
       content:
@@ -475,33 +501,23 @@ components:
               message:
                 type: string
                 example: Not found.
-    Unauthenticated:
-      description: Missing or invalid Bearer token
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Unauthenticated.
-    ValidationError:
-      description: Validation error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: The given data was invalid.
-              errors:
-                type: object
-                additionalProperties:
-                  type: array
-                  items:
-                    type: string
   schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
     BulkCampaign:
       type: object
       properties:
@@ -608,22 +624,6 @@ components:
               format: uuid
             name:
               type: string
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-    Pagination:
-      type: object
-      properties:
-        current_page:
-          type: integer
-        last_page:
-          type: integer
-        per_page:
-          type: integer
-        total:
-          type: integer
   parameters:
     ResourceId:
       name: id
