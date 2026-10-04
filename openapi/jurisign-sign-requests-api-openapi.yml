@@ -221,6 +221,25 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found.
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
     ValidationError:
       description: Validation error
       content:
@@ -247,26 +266,78 @@ components:
               message:
                 type: string
                 example: Unauthenticated.
-    Error:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Not found.
   schemas:
+    SignRequestDetailed:
+      allOf:
+      - $ref: '#/components/schemas/SignRequest'
+      - type: object
+        properties:
+          signers:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                otp_channel:
+                  type: string
+                  enum:
+                  - sms
+                  - email
+                status:
+                  type: string
+                signing_order:
+                  type: integer
+                signing_link:
+                  type: string
+                  format: uri
+                notified_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                viewed_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                signed_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                declined_at:
+                  type:
+                  - string
+                  - 'null'
+                  format: date-time
+                decline_reason:
+                  type:
+                  - string
+                  - 'null'
+                zones:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SignatureZone'
+          downloads:
+            type: object
+            properties:
+              signed_pdf:
+                type:
+                - string
+                - 'null'
+                format: uri
+              proof:
+                type:
+                - string
+                - 'null'
+                format: uri
     Pagination:
       type: object
       properties:
@@ -278,6 +349,41 @@ components:
           type: integer
         total:
           type: integer
+    SignatureZone:
+      type: object
+      properties:
+        page:
+          type: integer
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        type:
+          type: string
+          enum:
+          - signature
+          - text
+          - date
+          - checkbox
+          default: signature
+        label:
+          type:
+          - string
+          - 'null'
+          description: Instruction shown to the signer for text/checkbox fields
+        required:
+          type: boolean
+          default: true
+          description: Whether a text/checkbox field must be filled before the signer can sign
+        value:
+          type:
+          - string
+          - 'null'
+          description: Value entered by the signer (text/checkbox) or auto-filled date. Populated only once the sign request is signed.
     CreateSignRequestInput:
       type: object
       required:
@@ -448,41 +554,6 @@ components:
           type: boolean
           default: false
           description: Require signers to take a selfie for identity verification
-    SignatureZone:
-      type: object
-      properties:
-        page:
-          type: integer
-        x:
-          type: number
-        y:
-          type: number
-        width:
-          type: number
-        height:
-          type: number
-        type:
-          type: string
-          enum:
-          - signature
-          - text
-          - date
-          - checkbox
-          default: signature
-        label:
-          type:
-          - string
-          - 'null'
-          description: Instruction shown to the signer for text/checkbox fields
-        required:
-          type: boolean
-          default: true
-          description: Whether a text/checkbox field must be filled before the signer can sign
-        value:
-          type:
-          - string
-          - 'null'
-          description: Value entered by the signer (text/checkbox) or auto-filled date. Populated only once the sign request is signed.
     SignRequest:
       type: object
       properties:
@@ -616,77 +687,6 @@ components:
                 - notified
                 - signed
                 - declined
-    SignRequestDetailed:
-      allOf:
-      - $ref: '#/components/schemas/SignRequest'
-      - type: object
-        properties:
-          signers:
-            type: array
-            items:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                name:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                otp_channel:
-                  type: string
-                  enum:
-                  - sms
-                  - email
-                status:
-                  type: string
-                signing_order:
-                  type: integer
-                signing_link:
-                  type: string
-                  format: uri
-                notified_at:
-                  type:
-                  - string
-                  - 'null'
-                  format: date-time
-                viewed_at:
-                  type:
-                  - string
-                  - 'null'
-                  format: date-time
-                signed_at:
-                  type:
-                  - string
-                  - 'null'
-                  format: date-time
-                declined_at:
-                  type:
-                  - string
-                  - 'null'
-                  format: date-time
-                decline_reason:
-                  type:
-                  - string
-                  - 'null'
-                zones:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SignatureZone'
-          downloads:
-            type: object
-            properties:
-              signed_pdf:
-                type:
-                - string
-                - 'null'
-                format: uri
-              proof:
-                type:
-                - string
-                - 'null'
-                format: uri
   parameters:
     ResourceId:
       name: id

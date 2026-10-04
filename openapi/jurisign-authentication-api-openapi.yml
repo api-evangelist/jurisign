@@ -195,7 +195,46 @@ paths:
           description: Rate limit exceeded (10 attempts/minute for the targeted account, 60/minute for the calling IP) — see the Retry-After header
           $ref: '#/components/responses/Error'
 components:
+  schemas:
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Jean Dupont
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          example: admin
+        organization:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              example: My Company
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
   responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
     ValidationError:
       description: Validation error
       content:
@@ -222,45 +261,6 @@ components:
               message:
                 type: string
                 example: Unauthenticated.
-    Error:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-  schemas:
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-    AuthUser:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Jean Dupont
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-          example: admin
-        organization:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            name:
-              type: string
-              example: My Company
   securitySchemes:
     bearerAuth:
       type: http

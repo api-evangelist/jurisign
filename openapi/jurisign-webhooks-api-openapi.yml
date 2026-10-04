@@ -262,6 +262,26 @@ paths:
           $ref: '#/components/responses/Forbidden'
 components:
   responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found.
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Forbidden.
     ValidationError:
       description: Validation error
       content:
@@ -288,32 +308,7 @@ components:
               message:
                 type: string
                 example: Unauthenticated.
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Not found.
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Forbidden.
   schemas:
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
     Pagination:
       type: object
       properties:
@@ -325,33 +320,11 @@ components:
           type: integer
         total:
           type: integer
-    WebhookLog:
+    MessageResponse:
       type: object
       properties:
-        id:
-          type: integer
-        event:
+        message:
           type: string
-        status:
-          type: string
-          enum:
-          - success
-          - pending
-          - failed
-        response_status:
-          type:
-          - integer
-          - 'null'
-        attempts:
-          type: integer
-        next_retry_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-        created_at:
-          type: string
-          format: date-time
     WebhookEndpoint:
       type: object
       properties:
@@ -381,6 +354,33 @@ components:
               type: integer
             pending:
               type: integer
+    WebhookLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        event:
+          type: string
+        status:
+          type: string
+          enum:
+          - success
+          - pending
+          - failed
+        response_status:
+          type:
+          - integer
+          - 'null'
+        attempts:
+          type: integer
+        next_retry_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
   securitySchemes:
     bearerAuth:
       type: http
