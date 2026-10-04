@@ -244,6 +244,9 @@ maintainers:
     email: support@jurisign.fr
     url: https://www.jurisign.fr
 common:
+- type: CapabilityMap
+  url: capabilities/jurisign-capability-edges.yml
+  name: JuriSign Business Capability Map
 - type: Website
   url: https://www.jurisign.fr/
 - type: DeveloperPortal
