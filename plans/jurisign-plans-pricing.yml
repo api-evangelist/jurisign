@@ -148,3 +148,60 @@ availability_commitment:
   note: >-
     Published as a general availability commitment on the pricing page. A contractual SLA is listed as an
     Entreprise-tier feature only.
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - free
+  - hybrid
+  - subscription
+  units: []
+  plans:
+  - name: Decouverte
+    access: other
+    model: free
+    model_how: derived
+    units: []
+    periods: []
+  - name: START
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods: []
+  - name: Solo
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods: []
+  - name: Equipe
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods: []
+  - name: Professionnel
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods: []
+  - name: Entreprise
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods: []
+  - name: Pack 100
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
+  - name: JuriSign Flash
+    access: other
+    model: subscription
+    model_how: derived
+    units: []
+    periods: []
