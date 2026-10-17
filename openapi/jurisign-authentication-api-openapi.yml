@@ -195,7 +195,48 @@ paths:
           description: Rate limit exceeded (10 attempts/minute for the targeted account, 60/minute for the calling IP) — see the Retry-After header
           $ref: '#/components/responses/Error'
 components:
+  responses:
+    Unauthenticated:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
   schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
     AuthUser:
       type: object
       properties:
@@ -220,47 +261,6 @@ components:
             name:
               type: string
               example: My Company
-    MessageResponse:
-      type: object
-      properties:
-        message:
-          type: string
-  responses:
-    Error:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-    ValidationError:
-      description: Validation error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: The given data was invalid.
-              errors:
-                type: object
-                additionalProperties:
-                  type: array
-                  items:
-                    type: string
-    Unauthenticated:
-      description: Missing or invalid Bearer token
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Unauthenticated.
   securitySchemes:
     bearerAuth:
       type: http
