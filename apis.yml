@@ -33,10 +33,8 @@ created: '2026-08-31'
 modified: '2026-08-31'
 specificationVersion: '0.21'
 tags:
-  - Electronic Signature
   - E-Signature
   - eIDAS
-  - Document Signing
   - PDF
   - Webhook
   - OTP
@@ -60,6 +58,8 @@ tags_raw:
   - identity-verification
   - audit-trail
   - data-residency-eu
+  - Electronic Signature
+  - Document Signing
 apis:
 - aid: jurisign:jurisign-account-api
   name: JuriSign Account API
