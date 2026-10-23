@@ -73,3 +73,9 @@ components:
       type: http
       scheme: bearer
       description: 'Obtain a token via POST /auth/token, then pass it as: Authorization: Bearer {token}'
+x-provenance:
+  method: harvested
+  publisher: JuriSign
+  source: https://www.jurisign.fr/api/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
